@@ -1,0 +1,7 @@
+{
+  "name": "sl-dev-screens-connector",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
