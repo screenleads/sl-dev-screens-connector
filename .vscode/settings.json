@@ -1,3 +1,25 @@
 {
-  "typescript.preferences.autoImportFileExcludePatterns": ["@ionic/angular/common", "@ionic/angular"]
+  "kiuwan.connectionSettings.remoteApplication.name": "portal-sca-angular",
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#26e78d",
+    "activityBar.activeBorder": "#945bc4",
+    "activityBar.background": "#26e78d",
+    "activityBar.foreground": "#15202b",
+    "activityBar.inactiveForeground": "#15202b99",
+    "activityBarBadge.background": "#945bc4",
+    "activityBarBadge.foreground": "#e7e7e7",
+    "sash.hoverBorder": "#26e78d",
+    "statusBar.background": "#26e78d",
+    "statusBar.foreground": "#15202b",
+    "statusBarItem.hoverBackground": "#26e78d",
+    "statusBarItem.remoteBackground": "#26e78d",
+    "statusBarItem.remoteForeground": "#15202b",
+    "titleBar.activeBackground": "#26e78d",
+    "titleBar.activeForeground": "#15202b",
+    "titleBar.inactiveBackground": "#26e78d",
+    "titleBar.inactiveForeground": "#15202b99",
+    "commandCenter.border": "#15202b99"
+  },
+  "peacock.color": "#42b883",
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

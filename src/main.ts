@@ -4,11 +4,17 @@ import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular/standalo
 
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { mocksInterceptor } from './app/shared/interceptors/mocks.interceptor';
+import { APP_CONFIG } from './environments/config/app-config.token';
+import { environment } from './environments/config/environment';
 
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
+    provideHttpClient(withInterceptors([mocksInterceptor])),
     provideRouter(routes, withPreloading(PreloadAllModules)),
+    { provide: APP_CONFIG, useValue: environment },
   ],
 });
