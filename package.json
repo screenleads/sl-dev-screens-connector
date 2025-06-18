@@ -36,6 +36,7 @@
     "getmac": "^6.6.0",
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
+    "sl-dev-design-system": "file:sl-dev-design-system-0.0.0.tgz",
     "sockjs-client": "^1.6.1",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

@@ -12,14 +12,11 @@ import { AdvicesService } from '../../services/advices.service';
   imports: [IonContent, CommonModule, FormsModule]
 })
 export class AdvicesPage implements OnInit {
-  imageAux = "";
+  currentImage = "smash1";
   constructor(private advicesSrv: AdvicesService) { }
 
   ngOnInit() {
-    this.advicesSrv.getImage("smash1").subscribe(data => {
-      console.log(data);
-      this.imageAux = data;
-    });
+
   }
 
 }

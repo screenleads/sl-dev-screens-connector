@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
-import { DeviceUUID } from 'device-uuid';
+import { DevicesService } from './features/loading/services/loading.service';
+
 
 @Component({
   selector: 'app-root',
@@ -8,9 +9,8 @@ import { DeviceUUID } from 'device-uuid';
   imports: [IonApp, IonRouterOutlet],
 })
 export class AppComponent {
-  uuid = new DeviceUUID().get();
-  du = new DeviceUUID().parse();
-  constructor() {
-    console.log(this.uuid);
+
+  constructor(private _devicesSrv: DevicesService) {
+    this._devicesSrv.registerDevice();
   }
 }

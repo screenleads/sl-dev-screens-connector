@@ -4,4 +4,9 @@
       <ion-title size="large">connection</ion-title>
     </ion-toolbar>
   </ion-header>
+  <div>
+    <input type="text" [(ngModel)]="descriptionName" />
+    <button (click)="updateDevice()">Send</button>
+    <button sca-button variant="primary" size="small">LOGIN</button>
+  </div>
 </ion-content>

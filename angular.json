@@ -36,6 +36,8 @@
               }
             ],
             "styles": [
+              "sl-dev-components/styles/styles.scss",
+              "sl-dev-components/fonts/fonts.scss",
               "src/global.scss",
               "src/theme/variables.scss"
             ],
@@ -121,6 +123,8 @@
               }
             ],
             "styles": [
+              "sl-dev-components/styles/styles.scss",
+              "sl-dev-components/fonts/fonts.scss",
               "src/global.scss",
               "src/theme/variables.scss"
             ],
