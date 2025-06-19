@@ -1,0 +1,5 @@
+<footer id="lead-info">
+  <qr-code *ngIf="advice!=undefined" [value]="formatUrl()" 
+         size="300" 
+         errorCorrectionLevel="M" />
+</footer>

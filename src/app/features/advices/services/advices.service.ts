@@ -1,15 +1,17 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-
+import { effect, Injectable } from '@angular/core';
+import { DevicesService } from '../../loading/services/loading.service';
+import { map, Observable } from 'rxjs';
+import { Advice } from '../model/Advice';
 @Injectable({
   providedIn: 'root',
 })
 export class AdvicesService {
 
-  constructor(private _http: HttpClient) { }
+  constructor(private _http: HttpClient, private _devicesSrv:DevicesService) {}
 
 
-  getImage(alias: string) {
-    return this._http.get(`http://localhost:3000/image/${alias}`, { responseType: 'text' });
+  getImages(roomId: string):  Observable<Advice[]> {
+    return this._http.get(`http://localhost:3000/advices/${roomId}`).pipe(map((result:any)=>result));
   }
 }

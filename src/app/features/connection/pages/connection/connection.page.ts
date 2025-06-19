@@ -5,13 +5,13 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/stan
 import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
 import { DevicesService } from 'src/app/features/loading/services/loading.service';
 import { Router } from '@angular/router';
-import { ScaButtonComponent } from 'sl-dev-components';
+import { SlButtonComponent } from 'sl-dev-components';
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.page.html',
   styleUrls: ['./connection.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, ScaButtonComponent]
+  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, SlButtonComponent]
 })
 export class ConnectionPage implements OnInit {
   descriptionName = "dispositivo de pruebas";
