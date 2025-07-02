@@ -1,47 +1,65 @@
+import { Media } from "./Media";
 import { Promotion } from "./Promotion";
 
 export class Advice {
-  private id: number = 0;
-  private reference: string = "";
-  private timeInterval: number = 3000;
-  private promo: Promotion | undefined;
+  private _id: number = 0;
+  private _description: string = "";
+  private _customInterval: boolean = false;
+  private _interval: number = 0;
+  private _promo: Promotion | undefined;
+  private _media: Media | undefined;
 
-  constructor(
-     id: number = 0,
-     reference: string = "",
-     timeInterval: number = 3000,
-     promo: Promotion | undefined = undefined
-  ) {
-    this.setId(id);
-    this.setReference(reference);
-    this.setTimeInterval(timeInterval);
-    this.setPromo(promo);
-    
+  // ID
+  get id(): number {
+    return this._id;
+  }
+  set id(value: number) {
+    this._id = value;
   }
 
-  public getId(): number {
-    return this.id;
+  // Description
+  get description(): string {
+    return this._description;
   }
-  public setId(id: number): void {
-    this.id = id;
+  set description(value: string) {
+    this._description = value.trim(); // lógica opcional
   }
-  public getReference(): string {
-    return this.reference;
+
+  // Custom Interval
+  get customInterval(): boolean {
+    return this._customInterval;
   }
-  public setReference(reference: string): void {
-    this.reference = reference;
+  set customInterval(value: boolean) {
+    this._customInterval = value;
   }
-  public getTimeInterval(): number {
-    return this.timeInterval;
+
+  // Interval
+  get interval(): number {
+    return this._interval;
   }
-  public setTimeInterval(timeInterval: number): void {
-    this.timeInterval = timeInterval;
+  set interval(value: number) {
+    if (value >= 0) {
+      this._interval = value;
+    } else {
+      throw new Error("El intervalo no puede ser negativo");
+    }
   }
-  public getPromo(): Promotion | undefined {
-    return this.promo;
+
+  // Promo
+  get promo(): Promotion | undefined {
+    return this._promo;
   }
-  public setPromo(promo: Promotion | undefined): void {
-    this.promo = promo;
+  set promo(value: Promotion | undefined) {
+    this._promo = value;
   }
+
+  // Media
+  get media(): Media | undefined {
+    return this._media;
+  }
+  set media(value: Media | undefined) {
+    this._media = value;
+  }
+
 
 }

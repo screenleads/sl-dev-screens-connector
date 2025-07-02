@@ -8,10 +8,12 @@ import { Advice } from '../model/Advice';
 })
 export class AdvicesService {
 
-  constructor(private _http: HttpClient, private _devicesSrv:DevicesService) {}
+  constructor(private _http: HttpClient, private _devicesSrv: DevicesService) { }
 
-
-  getImages(roomId: string):  Observable<Advice[]> {
-    return this._http.get(`http://localhost:3000/advices/${roomId}`).pipe(map((result:any)=>result));
+  getAdvices() {
+    return this._http.get(`http://localhost:3000/advices`).pipe(map((result: any) => result));
+  }
+  getImages(roomId: string): Observable<Advice[]> {
+    return this._http.get(`http://localhost:3000/advices/${roomId}`).pipe(map((result: any) => result));
   }
 }

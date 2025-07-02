@@ -10,12 +10,13 @@ import { NgIf } from '@angular/common';
   imports: [QrCodeComponent, NgIf]
 
 })
-export class LeadInfoComponent  implements OnInit {
-  @Input() advice : Advice | undefined;
+export class LeadInfoComponent implements OnInit {
+  @Input() advice: Advice | undefined;
   constructor() { }
 
-  ngOnInit() {}
-  formatUrl(){
-    return  this.advice?.getPromo()?.getUrlPromo();
+  ngOnInit() { }
+  formatUrl() {
+    // return  this.advice?.getPromo()?.getUrlPromo();
+    return "";
   }
 }

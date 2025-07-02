@@ -1,12 +1,24 @@
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">connection</ion-title>
-    </ion-toolbar>
-  </ion-header>
-  <div>
-    <input type="text" [(ngModel)]="descriptionName" />
-    <button (click)="updateDevice()">Send</button>
-    <button sl-button variant="primary" size="small">LOGIN</button>
+  <div class="content-ver">
+    <img src="./assets/images/logo-hor.svg" id="logo" />
+    <div>
+      <sl-module-title>
+        <!-- <span slModuleTitlePre>Pre Título</span> -->
+        <h1>Vamos a nombrar este dispositivo</h1>
+        <!-- <span slModuleTitlePost>Post Título</span> -->
+      </sl-module-title>
+
+      <sl-text-field [label]="'El nombre del dispositivo'">
+        <input slNativeControl type="text" [(ngModel)]="descriptionName" />
+        <sl-icon slTextFieldEnd icon="aod"></sl-icon>
+      </sl-text-field>
+    </div>
+
+    <button sl-button variant="primary" size="xlarge" (click)="updateDevice()">
+      <!-- <sl-icon icon="search"></sl-icon> -->
+      Guardar
+      <sl-icon icon="save"></sl-icon>
+
+    </button>
   </div>
 </ion-content>

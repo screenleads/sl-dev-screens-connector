@@ -2,6 +2,11 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "newProjectRoot": "projects",
+  "cli": {
+    "cache": {
+      "enabled": false
+    }
+  },
   "projects": {
     "app": {
       "projectType": "application",
@@ -36,6 +41,7 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "sl-dev-components/styles/styles.scss",
               "sl-dev-components/fonts/fonts.scss",
               "src/global.scss",
@@ -123,6 +129,7 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "sl-dev-components/styles/styles.scss",
               "sl-dev-components/fonts/fonts.scss",
               "src/global.scss",

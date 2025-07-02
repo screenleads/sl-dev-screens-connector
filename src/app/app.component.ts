@@ -11,6 +11,6 @@ import { DevicesService } from './features/loading/services/loading.service';
 export class AppComponent {
 
   constructor(private _devicesSrv: DevicesService) {
-    this._devicesSrv.registerDevice();
+    // this._devicesSrv.registerDevice();
   }
 }

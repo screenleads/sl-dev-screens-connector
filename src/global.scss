@@ -44,6 +44,17 @@
 
 
 
-*{
+* {
     font-family: var(--sl-font-secondary-font-fa);
+}
+
+
+.content-ver {
+    padding: 10rem;
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--sl-color-neutrals-100);
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
 }

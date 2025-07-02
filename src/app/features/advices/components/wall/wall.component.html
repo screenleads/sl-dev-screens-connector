@@ -1,6 +1,40 @@
 <section id="wall">
-  <div id="wall-advice-content">
-    <img src="http://localhost:3000/image/{{medias[currentIndex].getReference()}}" />
+  <div class="content-ver" *ngIf="!played ">
+    <div>
+      <sl-module-title>
+        <!-- <span slModuleTitlePre>Pre Título</span> -->
+        <h1 *ngIf="advices.length<=0">Cargando tus anuncios...</h1>
+        <h1 *ngIf="advices.length>0">Contenido cargado</h1>
+        <span *ngIf="advices.length>0" slModuleTitlePost>¿Quieres empezar a reproducir tu contenido en este
+          dispositivo?</span>
+      </sl-module-title>
+
+
+    </div>
+
+    <button sl-button variant="primary" size="xlarge" *ngIf="advices.length>0" (click)="initAdvices()">
+      <!-- <sl-icon icon="search"></sl-icon> -->
+      Empezar
+      <sl-icon icon="slideshow"></sl-icon>
+
+    </button>
   </div>
-  <app-lead-info [advice]="medias[currentIndex]"></app-lead-info>
+  <div id="wall-advice-content">
+    <!-- {{currentIndex}}
+    {{getMediaCategory(currentAdvice?.media?.type?.type!)}}
+    {{currentAdvice?.media}} -->
+    <video #mainVideo controls autoplay></video>
+
+    <!-- Video oculto para precargar -->
+    <video #bufferVideo preload="auto" style="display: none"></video>
+    <!-- <video #mainVideo *ngIf="getMediaCategory(currentAdvice?.media?.type?.type!) == 'video'" autoplay preload="auto"
+      [attr.src]="`http://localhost:3000/medias/render/${currentAdvice?.media?.id}`" controls>
+      Your browser does not support the video tag.
+    </video>
+
+    <video #bufferVideo preload="auto" style="display: none"></video> -->
+    <img *ngIf="getMediaCategory(currentAdvice?.media?.type?.type!) == 'image'"
+      src="http://localhost:3000/medias/render/{{currentAdvice?.media?.id}}" />
+  </div>
+  <!-- <app-lead-info [advice]="advices[currentIndex]"></app-lead-info> -->
 </section>
