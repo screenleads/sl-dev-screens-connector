@@ -55,3 +55,16 @@ video {
     background-color: #532CE0; // o el color principal de tu marca
     transition: width 0.3s ease;
 }
+
+.video-alert {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background-color: rgba(255, 0, 0, 0.9);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    z-index: 9999;
+    max-width: 80%;
+}

@@ -47,12 +47,21 @@ export class WallComponent implements OnInit {
   videoSrc: string | null = null;
   public progress = 0;
   public total = 0;
+  public errorMessage: string | null = null;
   constructor(
     private _advicesSrv: AdvicesService,
     private changeDetector: ChangeDetectorRef,
     private videoStorageSrv: VideoStorageService
   ) { }
 
+  private showAlert(message: string) {
+    this.errorMessage = message;
+    this.changeDetector.detectChanges(); // fuerza actualización inmediata
+    setTimeout(() => {
+      this.errorMessage = null;
+      this.changeDetector.detectChanges();
+    }, 8000); // mensaje visible por 8 segundos
+  }
   async ngOnInit() {
     console.log("→ Obteniendo advices...");
 
@@ -67,6 +76,7 @@ export class WallComponent implements OnInit {
         this.changeDetector.detectChanges(); // actualiza UI
       } catch (err) {
         console.error('Error al descargar', advice.id, err);
+        this.showAlert('❌ Error al descargar: ' + (err));
       }
     }
 
@@ -98,6 +108,8 @@ export class WallComponent implements OnInit {
       console.log("✅ Video guardado en:", path);
     } catch (e) {
       console.error(`Error en video ${advice.id}:`, e);
+      this.showAlert('❌ Error al descargar: ' + (e));
+
       // (opcional) mostrar toast o continuar sin cortar
     }
 
@@ -115,6 +127,8 @@ export class WallComponent implements OnInit {
       // ⚠️ Ignorar si el error indica que la carpeta ya existe
       if (!error?.message?.includes('already exists')) {
         console.error('❌ Error creando carpeta:', error);
+        this.showAlert('❌ Error al crear la carpeta: ' + (error));
+
         throw error;
       }
     }
@@ -135,65 +149,56 @@ export class WallComponent implements OnInit {
 
 
   async playAdviceLoop(): Promise<void> {
-    this.played = true;
-
-    const isEven = this.currentIndex % 2 === 0;
-    const currentVideoEl = isEven ? this.mainVideoRef.nativeElement : this.bufferVideoRef.nativeElement;
-    const nextVideoEl = isEven ? this.bufferVideoRef.nativeElement : this.mainVideoRef.nativeElement;
-
-    const currentAdvice = this.advices[this.currentIndex];
-    const nextIndex = (this.currentIndex + 1) % this.advices.length;
-    const nextAdvice = this.advices[nextIndex];
-
-    // Cargar video actual
     try {
-      // const currentPath = `videos/video-${currentAdvice.id}.mp4`;
+      this.played = true;
 
-      // const fileCheck = await Filesystem.stat({
-      //   path: currentPath,
-      //   directory: Directory.Cache,
-      // });
+      const isEven = this.currentIndex % 2 === 0;
+      const currentVideoEl = isEven ? this.mainVideoRef.nativeElement : this.bufferVideoRef.nativeElement;
+      const nextVideoEl = isEven ? this.bufferVideoRef.nativeElement : this.mainVideoRef.nativeElement;
 
-      // if (fileCheck.size === 0) {
-      //   console.warn(`⚠️ El video actual está vacío. Se salta.`);
-      //   this.advanceIndex();
-      //   return this.playAdviceLoop();
-      // }
+      const currentAdvice = this.advices[this.currentIndex];
+      const nextIndex = (this.currentIndex + 1) % this.advices.length;
+      const nextAdvice = this.advices[nextIndex];
 
-      // const fileUri = await Filesystem.getUri({
-      //   path: currentPath,
-      //   directory: Directory.Cache,
-      // });
-
-      // const currentSrc = Capacitor.convertFileSrc(fileUri.uri);
-      // // currentVideoEl.src = currentSrc;
-      // // currentVideoEl.load();
-
-      // // await new Promise<void>((resolve) => {
-      // //   currentVideoEl.onloadedmetadata = () => resolve();
-      // // });
-
-      // // Comienza la reproducción
-      currentVideoEl.play();
       this.currentAdvice = currentAdvice;
 
-      // ⏳ Mientras tanto, precarga el siguiente video
+
+      // Preparar evento fallback
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ Fallback por timeout: video no terminó en 60s');
+        currentVideoEl.dispatchEvent(new Event('ended'));
+      }, 60000);
+
+      // Añadir eventos de diagnóstico
+      currentVideoEl.onerror = (err) => this.showAlert('❌ Error al reproducir ' + (err));
+      ;
+      currentVideoEl.onstalled = () => console.warn('📛 Video detenido (stalled)');
+      currentVideoEl.onwaiting = () => console.warn('⏳ Video esperando datos');
+
+      // Reproducir el video
+      await currentVideoEl.play();
+
+      // Precargar el siguiente
       this.preloadNextVideo(nextVideoEl, nextAdvice);
 
-      // Cuando termina, avanzar
       await new Promise<void>((resolve) => {
-        currentVideoEl.onended = () => resolve();
+        currentVideoEl.onended = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
       });
 
-      // Actualizamos el índice y vamos al siguiente
       this.advanceIndex();
-      return this.playAdviceLoop();
+      this.playAdviceLoop();
+
     } catch (err) {
       console.error('❌ Error reproduciendo video:', err);
+      this.showAlert('❌ Error reproduciendo video: ' + (err));
       this.advanceIndex();
-      return this.playAdviceLoop();
+      this.playAdviceLoop();
     }
   }
+
 
   private async preloadNextVideo(videoEl: HTMLVideoElement, advice: Advice): Promise<void> {
     try {

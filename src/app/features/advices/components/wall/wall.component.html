@@ -31,14 +31,17 @@
   </div>
   <div id="wall-advice-content" #wall>
 
-    <video #mainVideo preload="auto" autoplay muted class="media-advice"
+    <video #mainVideo preload="auto" autoplay muted playsinline class="media-advice"
       [ngClass]="{'visible':currentIndex % 2 === 0}"></video>
 
-    <video #bufferVideo preload="auto" autoplay muted class="media-advice"
+    <video #bufferVideo preload="auto" autoplay muted playsinline class="media-advice"
       [ngClass]="{'visible':currentIndex % 2 != 0}"></video>
 
 
     <img *ngIf="getMediaCategory(currentAdvice?.media?.type?.type!) == 'image'" src="{{currentAdvice?.media?.src}}" />
   </div>
   <!-- <app-lead-info [advice]="advices[currentIndex]"></app-lead-info> -->
+  <div *ngIf="errorMessage" class="video-alert">
+    {{ errorMessage }}
+  </div>
 </section>
