@@ -50,11 +50,13 @@
 
 
 .content-ver {
-    padding: 10rem;
+    padding: 6rem;
     width: 100%;
-    min-height: 100vh;
+    min-height: 100vw;
     background-color: var(--sl-color-neutrals-100);
     display: flex;
     justify-content: space-between;
     flex-direction: column;
+    position: absolute;
+    z-index: 999;
 }

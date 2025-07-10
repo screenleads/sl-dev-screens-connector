@@ -16,16 +16,16 @@ import { DevicesService } from '../../services/loading.service';
 export class LoadingPage implements OnInit {
 
   constructor(private _router: Router, private _devicesSrv: DevicesService) {
-    // effect(() => {
-    // console.log("DEVICE REGISTERED??", this._devicesSrv.getIsRegisteredDevice());
-    // if (this._devicesSrv.getIsRegisteredDevice()) {
-    //   setTimeout(() => {
-    //     SplashScreen.hide();
-    this._router.navigate(["/advices"]);
-    //   }, 3000);
+    effect(() => {
+      console.log("DEVICE REGISTERED??", this._devicesSrv.getIsRegisteredDevice());
+      if (this._devicesSrv.getIsRegisteredDevice()) {
+        setTimeout(() => {
+          SplashScreen.hide();
+          this._router.navigate(["/connect"]);
+        }, 3000);
 
-    // }
-    // })
+      }
+    })
   }
 
   async ngOnInit() {

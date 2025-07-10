@@ -8,9 +8,11 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { APP_CONFIG } from './environments/config/app-config.token';
 import { environment } from './environments/config/environment';
+import { File } from '@awesome-cordova-plugins/file/ngx';
 
 bootstrapApplication(AppComponent, {
   providers: [
+    { provide: File, useClass: File },
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
     provideHttpClient(),

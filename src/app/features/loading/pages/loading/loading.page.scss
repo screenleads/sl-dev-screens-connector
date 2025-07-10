@@ -2,6 +2,8 @@
     position: relative;
     width: 100%;
     height: 100%;
+    background: #000;
+    color: #fff;
 }
 
 .centered {
@@ -13,12 +15,12 @@
 
 #logo {
 
-    width: 50%;
+    width: 30%;
     max-width: 25.51rem;
 }
 
 #messageStep {
-    font-size: 3.25rem;
+    font-size: 1.2rem;
     font-family: Heebo;
     font-weight: 200;
     position: absolute;

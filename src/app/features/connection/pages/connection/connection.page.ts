@@ -18,8 +18,7 @@ export class ConnectionPage implements OnInit {
   constructor(private _router: Router, private _websocketSrv: WebsocketstompService, private _devicesSrv: DevicesService) { }
 
   ngOnInit() {
-    this._websocketSrv.initconnectionSocket();
-    this._websocketSrv.joinRoom(this._devicesSrv.getDevice()["uuid"]);
+
   }
 
   updateDevice() {

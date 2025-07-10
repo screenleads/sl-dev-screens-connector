@@ -1,0 +1,9 @@
+.app-rotated {
+    transform: rotate(90deg);
+    transform-origin: top left;
+    width: 100vh;
+    height: 100VW;
+    position: absolute;
+    top: 0VH;
+    left: 100VW;
+}

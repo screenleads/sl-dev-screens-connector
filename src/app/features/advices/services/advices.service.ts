@@ -11,9 +11,12 @@ export class AdvicesService {
   constructor(private _http: HttpClient, private _devicesSrv: DevicesService) { }
 
   getAdvices() {
-    return this._http.get(`http://localhost:3000/advices`).pipe(map((result: any) => result));
+    return this._http.get(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/advices`).pipe(map((result: any) => result));
+  }
+  getAdvicesVisibles() {
+    return this._http.get(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/advices/visibles`).pipe(map((result: any) => result));
   }
   getImages(roomId: string): Observable<Advice[]> {
-    return this._http.get(`http://localhost:3000/advices/${roomId}`).pipe(map((result: any) => result));
+    return this._http.get(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/advices/${roomId}`).pipe(map((result: any) => result));
   }
 }

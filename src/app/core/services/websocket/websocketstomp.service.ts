@@ -19,7 +19,7 @@ export class WebsocketstompService {
 
   }
   initconnectionSocket() {
-    const url = '//localhost:3000/chat-socket';
+    const url = '//sl-dev-backend-7ab91220ba93.herokuapp.com/chat-socket';
     const socket = new SockJS(url);
     this.stompclient = Stomp.over(socket);
   }
