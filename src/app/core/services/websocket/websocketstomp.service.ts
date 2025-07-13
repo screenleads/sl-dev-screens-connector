@@ -7,30 +7,32 @@ import { ChatMessage } from 'src/app/shared/models/chat-message';
   providedIn: 'root'
 })
 export class WebsocketstompService {
-
+ private url = '//sl-dev-backend-7ab91220ba93.herokuapp.com/chat-socket';
   private stompclient: any;
-
-  constructor() {
-    this.getMacAddresses();
-    this.initconnectionSocket();
-  }
+  private roomID = '';
   getMacAddresses() {
 
 
   }
-  initconnectionSocket() {
-    const url = '//sl-dev-backend-7ab91220ba93.herokuapp.com/chat-socket';
-    const socket = new SockJS(url);
-    this.stompclient = Stomp.over(socket);
+  initconnectionSocket(roomId:string) {
+    console.log("::::::::::::Conectando al websocket", this.url);
+    this.roomID = roomId;
   }
 
-  joinRoom(roomId: string) {
+  joinRoom() {
+    // this.initconnectionSocket();
+    const socket = new SockJS(this.url);
+    this.stompclient = Stomp.over(socket);
     this.stompclient.connect({}, () => {
-      this.stompclient.subscribe(`/topic/${roomId}`, (messages: any) => {
+      console.log("::::::::::::Conectado al websocket en el room", this.roomID);
+      this.stompclient.subscribe(`/topic/${this.roomID}`, (messages: any) => {
         const messageContent = JSON.parse(messages.body);
         console.log("DATA", messageContent);
       })
-    })
+    });
+    this.stompclient.disconnect(() => {
+      console.log("::::::::::::Desconectado del websocket en el room", this.roomID);
+    }, { debug: true });
   }
 
   sendMessage(roomId: string, chatmessage: ChatMessage) {

@@ -25,7 +25,7 @@ export class DevicesService {
   registerDevice() {
 
     return this._http.post(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices`, this.createDeviceObject(), { responseType: 'json' }).subscribe((device: any) => {
-      this._websocketSrv.joinRoom(device["uuid"]);
+      this._websocketSrv.initconnectionSocket(device["uuid"]);
       this.device.set(device);
       this.isRegisteredDevice.set(true);
     });

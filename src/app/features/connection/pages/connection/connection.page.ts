@@ -6,6 +6,7 @@ import { WebsocketstompService } from 'src/app/core/services/websocket/websocket
 import { DevicesService } from 'src/app/features/loading/services/loading.service';
 import { Router } from '@angular/router';
 import { SlButtonComponent, SlIconComponent, SlModuleTitleComponent, SlTextFieldModule } from 'sl-dev-components';
+import { Filesystem } from '@capacitor/filesystem';
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.page.html',
@@ -17,10 +18,23 @@ export class ConnectionPage implements OnInit {
   descriptionName = "dispositivo de pruebas";
   constructor(private _router: Router, private _websocketSrv: WebsocketstompService, private _devicesSrv: DevicesService) { }
 
-  ngOnInit() {
+  async ngOnInit() {
+  await this.requestFilesystemPermissions();
+  // luego tu lógica actual
+}
+async  requestFilesystemPermissions(): Promise<void> {
+  try {
+    const result = await Filesystem.requestPermissions();
 
+    if (result.publicStorage === 'granted') {
+      console.log('✅ Permisos de almacenamiento concedidos');
+    } else {
+      console.warn('❌ Permisos de almacenamiento denegados');
+    }
+  } catch (error) {
+    console.error('❌ Error al solicitar permisos:', error);
   }
-
+}
   updateDevice() {
     this._devicesSrv.updateDeviceName(this.descriptionName);
     this._router.navigate(["/advices"]);

@@ -21,6 +21,7 @@ import { Capacitor } from '@capacitor/core';
 import { firstValueFrom } from 'rxjs';
 import { VideoStorageService } from '../../services/video-storage.service';
 import CapacitorBlobWriter from 'capacitor-blob-writer';
+import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
 @Component({
   selector: 'app-wall',
   templateUrl: './wall.component.html',
@@ -51,8 +52,12 @@ export class WallComponent implements OnInit {
   constructor(
     private _advicesSrv: AdvicesService,
     private changeDetector: ChangeDetectorRef,
-    private videoStorageSrv: VideoStorageService
-  ) { }
+    private videoStorageSrv: VideoStorageService,
+    private _webSocketSrv: WebsocketstompService
+  ) { 
+      this._webSocketSrv.joinRoom();
+
+  }
 
   private showAlert(message: string) {
     this.errorMessage = message;
@@ -68,12 +73,10 @@ export class WallComponent implements OnInit {
     this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisibles());
     this.total = this.advices.length;
     console.log(this.advices.length);
-    const limited = this.advices.slice(0, 5);
-    for (const advice of limited) {
+    for (const advice of this.advices) {
       try {
         await this.downloadVideoToTV(advice);
         this.progress++;
-        this.changeDetector.detectChanges(); // actualiza UI
       } catch (err) {
         console.error('Error al descargar', advice.id, err);
         this.showAlert('❌ Error al descargar: ' + (err));
@@ -163,7 +166,7 @@ export class WallComponent implements OnInit {
       this.currentAdvice = currentAdvice;
 
 
-      // Preparar evento fallback
+      // // Preparar evento fallback
       const timeout = setTimeout(() => {
         console.warn('⚠️ Fallback por timeout: video no terminó en 60s');
         currentVideoEl.dispatchEvent(new Event('ended'));
