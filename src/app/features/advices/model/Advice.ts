@@ -1,6 +1,16 @@
 import { Media } from "./Media";
 import { Promotion } from "./Promotion";
 
+export interface TimeRange {
+  fromTime: [number, number];
+  toTime: [number, number];
+}
+
+export interface VisibilityRule {
+  day: string;
+  timeRanges: TimeRange[];
+}
+
 export class Advice {
   private _id: number = 0;
   private _description: string = "";
@@ -8,6 +18,7 @@ export class Advice {
   private _interval: number = 0;
   private _promo: Promotion | undefined;
   private _media: Media | undefined;
+  private _visibilityRules: VisibilityRule[] = [];
 
   // ID
   get id(): number {
@@ -22,7 +33,7 @@ export class Advice {
     return this._description;
   }
   set description(value: string) {
-    this._description = value.trim(); // lógica opcional
+    this._description = value.trim();
   }
 
   // Custom Interval
@@ -61,5 +72,11 @@ export class Advice {
     this._media = value;
   }
 
-
+  // Visibility Rules
+  get visibilityRules(): VisibilityRule[] {
+    return this._visibilityRules;
+  }
+  set visibilityRules(value: VisibilityRule[]) {
+    this._visibilityRules = value;
+  }
 }

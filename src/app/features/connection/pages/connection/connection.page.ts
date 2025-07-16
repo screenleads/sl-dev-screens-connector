@@ -15,26 +15,27 @@ import { Filesystem } from '@capacitor/filesystem';
   imports: [IonContent, CommonModule, FormsModule, SlButtonComponent, SlTextFieldModule, SlIconComponent, SlModuleTitleComponent]
 })
 export class ConnectionPage implements OnInit {
-  descriptionName = "dispositivo de pruebas";
+  descriptionName = "";
   constructor(private _router: Router, private _websocketSrv: WebsocketstompService, private _devicesSrv: DevicesService) { }
 
   async ngOnInit() {
-  await this.requestFilesystemPermissions();
-  // luego tu lógica actual
-}
-async  requestFilesystemPermissions(): Promise<void> {
-  try {
-    const result = await Filesystem.requestPermissions();
-
-    if (result.publicStorage === 'granted') {
-      console.log('✅ Permisos de almacenamiento concedidos');
-    } else {
-      console.warn('❌ Permisos de almacenamiento denegados');
-    }
-  } catch (error) {
-    console.error('❌ Error al solicitar permisos:', error);
+    await this.requestFilesystemPermissions();
+    this.descriptionName = this._devicesSrv.getDevice().descriptionName;
+    // luego tu lógica actual
   }
-}
+  async requestFilesystemPermissions(): Promise<void> {
+    try {
+      const result = await Filesystem.requestPermissions();
+
+      if (result.publicStorage === 'granted') {
+        console.log('✅ Permisos de almacenamiento concedidos');
+      } else {
+        console.warn('❌ Permisos de almacenamiento denegados');
+      }
+    } catch (error) {
+      console.error('❌ Error al solicitar permisos:', error);
+    }
+  }
   updateDevice() {
     this._devicesSrv.updateDeviceName(this.descriptionName);
     this._router.navigate(["/advices"]);

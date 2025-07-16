@@ -3,7 +3,6 @@ import { Injectable, Signal, signal, WritableSignal } from '@angular/core';
 import { DeviceUUID } from 'device-uuid';
 import { firstValueFrom, lastValueFrom, map, toArray } from 'rxjs';
 import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
-
 @Injectable({
   providedIn: 'root'
 })
@@ -14,80 +13,63 @@ export class DevicesService {
   deviceTypes: WritableSignal<any[]> = signal([]);
   private device: WritableSignal<any> = signal(null);
 
-
   public getIsRegisteredDevice: Signal<boolean> = this.isRegisteredDevice.asReadonly();
   public getDevice: Signal<any> = this.device.asReadonly();
+
   constructor(private _http: HttpClient, private _websocketSrv: WebsocketstompService) {
-
-
+    const storedDevice = localStorage.getItem('device');
+    if (storedDevice) {
+      const parsed = JSON.parse(storedDevice);
+      this.device.set(parsed);
+      this.isRegisteredDevice.set(true);
+      this._websocketSrv.initconnectionSocket(parsed.uuid);
+    }
   }
 
   registerDevice() {
-
     return this._http.post(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices`, this.createDeviceObject(), { responseType: 'json' }).subscribe((device: any) => {
       this._websocketSrv.initconnectionSocket(device["uuid"]);
       this.device.set(device);
       this.isRegisteredDevice.set(true);
+      localStorage.setItem('device', JSON.stringify(device));
     });
+  }
 
+  updateDeviceName(descriptionName: string) {
+    let deviceAux = { ...this.device() };
+    deviceAux["descriptionName"] = descriptionName;
+
+    return this._http.put(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices/${deviceAux.id}`, deviceAux, { responseType: 'json' }).subscribe((device: any) => {
+      this.device.set(device);
+      localStorage.setItem('device', JSON.stringify(device));
+    });
   }
 
   getDeviceTypes() {
-    try {
-      this._http.get<any[]>(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices/types`).subscribe((deviceTypes: any) => {
-        console.log("DEVICETYPES", deviceTypes);
-        this.deviceTypes.set(deviceTypes);
-      });
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      throw error;
-    }
-
-
+    this._http.get<any[]>(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices/types`).subscribe((deviceTypes: any) => {
+      this.deviceTypes.set(deviceTypes);
+    });
   }
-
 
   createDeviceObject() {
     const width = window.innerWidth;
     const height = window.innerHeight;
     let deviceType;
+
     if (width <= 768) {
-      console.log("MOBILE", width);
-      deviceType = this.deviceTypes().find(a => a.type == "MOBILE");
+      deviceType = this.deviceTypes().find(a => a.type === "MOBILE");
     } else if (width <= 1024) {
-      console.log("TABLET", width);
-      deviceType = this.deviceTypes().find(a => a.type == "TABLET");
+      deviceType = this.deviceTypes().find(a => a.type === "TABLET");
     } else {
-      console.log("TV", width);
-      deviceType = this.deviceTypes().find(a => a.type == "TV");
-      console.log("TV", deviceType, this.deviceTypes);
-
-
+      deviceType = this.deviceTypes().find(a => a.type === "TV");
     }
+
     return {
-      "uuid": this.uuid,
-      "descriptionName": "",
-      "width": width,
-      "height": height,
-      "type": deviceType
-    }
-
+      uuid: this.uuid,
+      descriptionName: '',
+      width,
+      height,
+      type: deviceType
+    };
   }
-
-
-
-  updateDeviceName(descriptionName: String) {
-    let deviceAux = this.device();
-    deviceAux["descriptionName"] = descriptionName;
-    this.device.set(deviceAux);
-    return this._http.put(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices/${this.device()["id"]}`, this.device(), { responseType: 'json' }).subscribe((device: any) => {
-      this.device.set(device);
-    });
-
-  }
-
-  // getDevice() {
-  //   return this._http.get(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices`, { responseType: 'json' });
-  // }
-
 }

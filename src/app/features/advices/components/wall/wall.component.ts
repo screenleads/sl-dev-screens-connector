@@ -22,6 +22,7 @@ import { firstValueFrom } from 'rxjs';
 import { VideoStorageService } from '../../services/video-storage.service';
 import CapacitorBlobWriter from 'capacitor-blob-writer';
 import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
+import { DevicesService } from 'src/app/features/loading/services/loading.service';
 @Component({
   selector: 'app-wall',
   templateUrl: './wall.component.html',
@@ -51,11 +52,12 @@ export class WallComponent implements OnInit {
   public errorMessage: string | null = null;
   constructor(
     private _advicesSrv: AdvicesService,
+    private _devicesSrv: DevicesService,
     private changeDetector: ChangeDetectorRef,
     private videoStorageSrv: VideoStorageService,
     private _webSocketSrv: WebsocketstompService
-  ) { 
-      this._webSocketSrv.joinRoom();
+  ) {
+    this._webSocketSrv.joinRoom();
 
   }
 
@@ -68,9 +70,9 @@ export class WallComponent implements OnInit {
     }, 8000); // mensaje visible por 8 segundos
   }
   async ngOnInit() {
-    console.log("→ Obteniendo advices...");
+    console.log("→ Obteniendo advices...", this._devicesSrv.getDevice());
 
-    this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisibles());
+    this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisiblesByDevice(this._devicesSrv.getDevice().id));
     this.total = this.advices.length;
     console.log(this.advices.length);
     for (const advice of this.advices) {
@@ -160,8 +162,16 @@ export class WallComponent implements OnInit {
       const nextVideoEl = isEven ? this.bufferVideoRef.nativeElement : this.mainVideoRef.nativeElement;
 
       const currentAdvice = this.advices[this.currentIndex];
-      const nextIndex = (this.currentIndex + 1) % this.advices.length;
-      const nextAdvice = this.advices[nextIndex];
+      let nextIndex = (this.currentIndex + 1) % this.advices.length;
+      let nextAdvice = this.advices[nextIndex];
+      let attempts = 0;
+
+      while (!this.isAdviceVisible(nextAdvice) && attempts < this.advices.length) {
+        nextIndex = (nextIndex + 1) % this.advices.length;
+        nextAdvice = this.advices[nextIndex];
+        attempts++;
+      }
+
 
       this.currentAdvice = currentAdvice;
 
@@ -246,5 +256,30 @@ export class WallComponent implements OnInit {
     if (type.startsWith('video/')) return 'video';
     if (type.startsWith('audio/')) return 'audio';
     return 'other';
+  }
+
+  isAdviceVisible(advice: Advice): boolean {
+    if (!advice.visibilityRules?.length) return true; // Si no hay reglas, se asume visible
+
+    const now = new Date();
+    const currentDay = now.toLocaleString('en-US', { weekday: 'long' }).toUpperCase();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    for (const rule of advice.visibilityRules) {
+      if (rule.day !== currentDay) continue;
+
+      for (const range of rule.timeRanges || []) {
+        const [fromH, fromM] = range.fromTime;
+        const [toH, toM] = range.toTime;
+        const fromMinutes = fromH * 60 + fromM;
+        const toMinutes = toH * 60 + toM;
+
+        if (currentMinutes >= fromMinutes && currentMinutes <= toMinutes) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }

@@ -16,6 +16,9 @@ export class AdvicesService {
   getAdvicesVisibles() {
     return this._http.get(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/advices/visibles`).pipe(map((result: any) => result));
   }
+  getAdvicesVisiblesByDevice(deviceId: string) {
+    return this._http.get(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/devices/${deviceId}/advices`).pipe(map((result: any) => result));
+  }
   getImages(roomId: string): Observable<Advice[]> {
     return this._http.get(`https://sl-dev-backend-7ab91220ba93.herokuapp.com/advices/${roomId}`).pipe(map((result: any) => result));
   }
