@@ -60,3 +60,31 @@
     position: absolute;
     z-index: 999;
 }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-internal-autofill-selected {
+  box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
+  background-color:  var(--sl-color-neutrals-100) !important;
+  -webkit-box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
+  -webkit-text-fill-color: inherit !important;
+  caret-color: inherit !important;
+  transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
+    -webkit-text-fill-color: #d1ff00 !important; // o el color que necesites
+  caret-color: #d1ff00; // color del cursor
+}
+
+:host {
+  ::ng-deep input:-webkit-autofill {
+  box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
+  background-color:  var(--sl-color-neutrals-100) !important;
+  -webkit-box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
+  -webkit-text-fill-color: inherit !important;
+  caret-color: inherit !important;
+  transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
+    -webkit-text-fill-color:  var(--sl-color-primary-100) !important; // o el color que necesites
+  caret-color:  var(--sl-color-primary-100); // color del cursor
+
+  }
+}
