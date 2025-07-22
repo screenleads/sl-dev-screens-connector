@@ -1,0 +1,36 @@
+<!-- <ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>loading</ion-title>
+  </ion-toolbar>
+</ion-header> -->
+
+
+
+<ion-content [fullscreen]="true">
+  <div class="content-ver">
+    <img src="./assets/images/logo-hor.svg" id="logo" />
+    <div>
+      <sl-module-title>
+        <!-- <span slModuleTitlePre>Pre Título</span> -->
+        <h1>Identificate</h1>
+        <span slModuleTitlePost>Para relacionar este dispositivo con tu cuenta</span>
+      </sl-module-title>
+
+      <sl-text-field [label]="'Usuario'">
+        <input slNativeControl type="text" [(ngModel)]="username" />
+        <sl-icon slTextFieldEnd icon="person"></sl-icon>
+      </sl-text-field>
+      <sl-text-field [label]="'Contraseña'">
+        <input slNativeControl type="password" [(ngModel)]="password" />
+        <sl-icon slTextFieldEnd icon="password"></sl-icon>
+      </sl-text-field>
+    </div>
+
+    <button sl-button variant="primary" size="medium" (click)="login()">
+      <!-- <sl-icon icon="search"></sl-icon> -->
+      Guardar
+      <sl-icon icon="save"></sl-icon>
+
+    </button>
+  </div>
+</ion-content>
