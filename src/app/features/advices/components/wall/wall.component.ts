@@ -23,6 +23,7 @@ import { VideoStorageService } from '../../services/video-storage.service';
 import CapacitorBlobWriter from 'capacitor-blob-writer';
 import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
 import { DevicesService } from 'src/app/features/loading/services/loading.service';
+import { DateTime } from 'luxon';
 @Component({
   selector: 'app-wall',
   templateUrl: './wall.component.html',
@@ -86,7 +87,18 @@ export class WallComponent implements OnInit {
     }
 
     console.log("✅ Todos los videos listos");
-    await this.preloadNextVideo(this.mainVideoRef.nativeElement, this.advices[this.currentIndex]);
+    let attempts = 0;
+    let nextIndex = 0;
+    let nextAdvice = this.advices[nextIndex];
+    while (!this.isAdviceVisible(nextAdvice) && attempts < this.advices.length) {
+      nextIndex = (nextIndex + 1) % this.advices.length;
+      nextAdvice = this.advices[nextIndex];
+      attempts++;
+    }
+    this.currentAdvice = nextAdvice;
+
+    await this.preloadNextVideo(this.mainVideoRef.nativeElement, nextAdvice);
+    this.advanceIndex();
     this.loaded = true;
 
 
@@ -245,8 +257,17 @@ export class WallComponent implements OnInit {
   }
 
   private advanceIndex() {
-    this.currentIndex = (this.currentIndex + 1) % this.advices.length;
+    let nextIndex = (this.currentIndex + 1) % this.advices.length;
+    let attempts = 0;
+
+    while (!this.isAdviceVisible(this.advices[nextIndex]) && attempts < this.advices.length) {
+      nextIndex = (nextIndex + 1) % this.advices.length;
+      attempts++;
+    }
+
+    this.currentIndex = nextIndex;
   }
+
 
 
   getMediaCategory(mediaType: string): 'image' | 'video' | 'audio' | 'other' {
@@ -259,11 +280,11 @@ export class WallComponent implements OnInit {
   }
 
   isAdviceVisible(advice: Advice): boolean {
-    if (!advice.visibilityRules?.length) return true; // Si no hay reglas, se asume visible
+    if (!advice.visibilityRules?.length) return true;
 
-    const now = new Date();
-    const currentDay = now.toLocaleString('en-US', { weekday: 'long' }).toUpperCase();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const now = DateTime.now().setZone('Europe/Madrid');
+    const currentDay = now.toFormat('cccc').toUpperCase(); // ej. "MONDAY"
+    const currentMinutes = now.hour * 60 + now.minute;
 
     for (const rule of advice.visibilityRules) {
       if (rule.day !== currentDay) continue;
@@ -274,8 +295,17 @@ export class WallComponent implements OnInit {
         const fromMinutes = fromH * 60 + fromM;
         const toMinutes = toH * 60 + toM;
 
-        if (currentMinutes >= fromMinutes && currentMinutes <= toMinutes) {
-          return true;
+        // 💡 Soporte para rangos que cruzan medianoche
+        if (fromMinutes <= toMinutes) {
+          // Rango normal
+          if (currentMinutes >= fromMinutes && currentMinutes <= toMinutes) {
+            return true;
+          }
+        } else {
+          // Rango que cruza la medianoche (ej. 22:00 a 06:00)
+          if (currentMinutes >= fromMinutes || currentMinutes <= toMinutes) {
+            return true;
+          }
         }
       }
     }

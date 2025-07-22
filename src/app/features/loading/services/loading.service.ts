@@ -1,14 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Signal, signal, WritableSignal } from '@angular/core';
-import { DeviceUUID } from 'device-uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { firstValueFrom, lastValueFrom, map, toArray } from 'rxjs';
 import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
 @Injectable({
   providedIn: 'root'
 })
 export class DevicesService {
-  private uuid = new DeviceUUID().get();
-  private du = new DeviceUUID().parse();
+  private uuid = uuidv4();
   private isRegisteredDevice: WritableSignal<boolean> = signal(false);
   deviceTypes: WritableSignal<any[]> = signal([]);
   private device: WritableSignal<any> = signal(null);
@@ -23,6 +22,11 @@ export class DevicesService {
       this.device.set(parsed);
       this.isRegisteredDevice.set(true);
       this._websocketSrv.initconnectionSocket(parsed.uuid);
+      let deviceAux = { ...this.device() };
+      this.uuid = deviceAux.uuid;
+      console.log("UUID::::::::::::::", this.uuid);
+    } else {
+      console.log("PRIMER USO DEL DISPOSITIVO UUID::::::::::::::", this.uuid);
     }
   }
 
@@ -52,6 +56,7 @@ export class DevicesService {
   }
 
   createDeviceObject() {
+
     const width = window.innerWidth;
     const height = window.innerHeight;
     let deviceType;
