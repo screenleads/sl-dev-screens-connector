@@ -13,13 +13,11 @@ import { WebsocketstompService } from './core/services/websocket/websocketstomp.
 export class AppComponent {
 
   constructor(private _devicesSrv: DevicesService, private _websocketSrv: WebsocketstompService) {
-    // this._websocketSrv.initconnectionSocket();
     effect(() => {
       if (this._devicesSrv.deviceTypes().length > 0) {
         console.log("REGISTRA EL DISPOSITIVO");
         this._devicesSrv.registerDevice();
       }
-
     })
 
   }

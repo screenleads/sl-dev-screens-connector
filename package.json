@@ -1,6 +1,6 @@
 {
   "name": "sl-dev-screens-connector",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
   "scripts": {
@@ -10,7 +10,10 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "build:android": "ionic build -- --configuration=development && npx cap sync android && cd android && ./gradlew assembleRelease && cd .. && npm run rename",
+    "build:android-dev": "ionic build -- --configuration=development && npx cap sync android && cd android && ./gradlew assembleRelease && cd .. && npm run rename",
+    "run:android-dev": "ionic build -- --configuration=development  && npx cap sync android",
+    "build:android-pro": "ionic build --prod  && npx cap sync android && cd android && ./gradlew assembleRelease && cd .. && npm run rename",
+    "run:android-pro": "ionic build --prod  && npx cap sync android",
     "cap:sync": "npx cap sync android && npm run postsync",
     "postsync": "node scripts/fix-gradle-version.js",
     "rename": "node scripts/fix-gradle-version.js"
