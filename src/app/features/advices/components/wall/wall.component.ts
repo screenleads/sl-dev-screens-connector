@@ -76,29 +76,32 @@ export class WallComponent implements OnInit {
     this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisiblesByDevice(this._devicesSrv.getDevice().id));
     this.total = this.advices.length;
     console.log(this.advices.length);
-    for (const advice of this.advices) {
-      try {
-        await this.downloadVideoToTV(advice);
-        this.progress++;
-      } catch (err) {
-        console.error('Error al descargar', advice.id, err);
-        this.showAlert('❌ Error al descargar: ' + (err));
+    if (this.total > 0) {
+      for (const advice of this.advices) {
+        try {
+          await this.downloadVideoToTV(advice);
+          this.progress++;
+        } catch (err) {
+          console.error('Error al descargar', advice.id, err);
+          this.showAlert('❌ Error al descargar: ' + (err));
+        }
       }
+
+      console.log("✅ Todos los videos listos");
+      let attempts = 0;
+      let nextIndex = 0;
+      let nextAdvice = this.advices[nextIndex];
+      while (!this.isAdviceVisible(nextAdvice) && attempts < this.advices.length) {
+        nextIndex = (nextIndex + 1) % this.advices.length;
+        nextAdvice = this.advices[nextIndex];
+        attempts++;
+      }
+      this.currentAdvice = nextAdvice;
+
+      await this.preloadNextVideo(this.mainVideoRef.nativeElement, nextAdvice);
+      this.advanceIndex();
     }
 
-    console.log("✅ Todos los videos listos");
-    let attempts = 0;
-    let nextIndex = 0;
-    let nextAdvice = this.advices[nextIndex];
-    while (!this.isAdviceVisible(nextAdvice) && attempts < this.advices.length) {
-      nextIndex = (nextIndex + 1) % this.advices.length;
-      nextAdvice = this.advices[nextIndex];
-      attempts++;
-    }
-    this.currentAdvice = nextAdvice;
-
-    await this.preloadNextVideo(this.mainVideoRef.nativeElement, nextAdvice);
-    this.advanceIndex();
     this.loaded = true;
 
 

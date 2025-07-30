@@ -9,7 +9,7 @@
 <ion-content [fullscreen]="true">
   <div class="content-ver">
     <img src="./assets/images/logo-hor.svg" id="logo" />
-    <div>
+    <form [formGroup]="form">
       <sl-module-title>
         <!-- <span slModuleTitlePre>Pre Título</span> -->
         <h1>Identificate</h1>
@@ -17,14 +17,14 @@
       </sl-module-title>
 
       <sl-text-field [label]="'Usuario'">
-        <input slNativeControl type="text" [(ngModel)]="username" />
+        <input slNativeControl type="text" formControlName="username" />
         <sl-icon slTextFieldEnd icon="person"></sl-icon>
       </sl-text-field>
       <sl-text-field [label]="'Contraseña'">
-        <input slNativeControl type="password" [(ngModel)]="password" />
+        <input slNativeControl type="password" formControlName="password" />
         <sl-icon slTextFieldEnd icon="password"></sl-icon>
       </sl-text-field>
-    </div>
+    </form>
 
     <button sl-button variant="primary" size="medium" (click)="login()">
       <!-- <sl-icon icon="search"></sl-icon> -->

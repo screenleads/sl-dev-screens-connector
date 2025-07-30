@@ -4,11 +4,17 @@ import { Router } from '@angular/router';
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
   private readonly tokenKey = 'access_token';
+  private readonly companyKey = 'company';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
-  loginSuccess(token: string) {
-    localStorage.setItem(this.tokenKey, token);
+  loginSuccess(res: any) {
+    console.log(res);
+    console.log(res.token);
+    console.log(res.user);
+    console.log(res.user.company.id);
+    localStorage.setItem(this.tokenKey, res.token);
+    localStorage.setItem(this.companyKey, res.user.company.id);
   }
 
   logout() {
@@ -21,7 +27,17 @@ export class AuthenticationService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+
+    // Opcional: decodificar y validar expiración del token
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000);
+      return payload.exp && payload.exp > now;
+    } catch (e) {
+      return false;
+    }
   }
 
   getUserPayload(): any {
