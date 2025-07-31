@@ -1,21 +1,19 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthenticationService } from '../services/authentication/authentication.service';
-
+import { AuthStore } from 'src/app/stores/auth.store';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
-  const auth = inject(AuthenticationService);
-  const token = auth.getToken();
-  console.log("TOKEN::::", token);
-  if (token && token != undefined && token != 'undefined') {
+  const authStore = inject(AuthStore);
+  const token = authStore.token;
+
+  if (token) {
     const cloned = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
     return next(cloned);
   }
-  console.log("REQUEST", req);
-  console.table(req);
+
   return next(req);
 };

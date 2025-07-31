@@ -58,7 +58,7 @@ export class WallComponent implements OnInit {
     private videoStorageSrv: VideoStorageService,
     private _webSocketSrv: WebsocketstompService
   ) {
-    this._webSocketSrv.joinRoom();
+   
 
   }
 

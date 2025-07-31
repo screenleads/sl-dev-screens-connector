@@ -1,7 +1,8 @@
-import { Component, effect } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { DevicesService } from './features/loading/services/loading.service';
 import { WebsocketstompService } from './core/services/websocket/websocketstomp.service';
+
 
 
 @Component({
@@ -23,6 +24,6 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    this._devicesSrv.getDeviceTypes();
+    // this._devicesSrv.getDeviceTypes();
   }
 }

@@ -1,82 +1,40 @@
-import { Media } from "./Media";
-import { Promotion } from "./Promotion";
 
-export interface TimeRange {
-  fromTime: [number, number];
-  toTime: [number, number];
-}
+import { Media } from 'src/app/shared/models/media';
+import { VisibilityRule } from 'src/app/shared/models/VisibilityRule';
+import { Promotion } from './Promotion';
 
-export interface VisibilityRule {
-  day: string;
-  timeRanges: TimeRange[];
-}
 
 export class Advice {
   private _id: number = 0;
-  private _description: string = "";
+  private _description: string = '';
   private _customInterval: boolean = false;
   private _interval: number = 0;
-  private _promo: Promotion | undefined;
-  private _media: Media | undefined;
+  private _media?: Media;
+  private _promotion?: Promotion | null;
   private _visibilityRules: VisibilityRule[] = [];
 
-  // ID
-  get id(): number {
-    return this._id;
-  }
-  set id(value: number) {
-    this._id = value;
+  constructor(data?: Partial<Advice>) {
+    Object.assign(this, data);
   }
 
-  // Description
-  get description(): string {
-    return this._description;
-  }
-  set description(value: string) {
-    this._description = value.trim();
-  }
+  get id(): number { return this._id; }
+  set id(v: number) { this._id = v; }
 
-  // Custom Interval
-  get customInterval(): boolean {
-    return this._customInterval;
-  }
-  set customInterval(value: boolean) {
-    this._customInterval = value;
-  }
+  get description(): string { return this._description; }
+  set description(v: string) { this._description = v.trim(); }
 
-  // Interval
-  get interval(): number {
-    return this._interval;
-  }
-  set interval(value: number) {
-    if (value >= 0) {
-      this._interval = value;
-    } else {
-      throw new Error("El intervalo no puede ser negativo");
-    }
-  }
+  get customInterval(): boolean { return this._customInterval; }
+  set customInterval(v: boolean) { this._customInterval = v; }
 
-  // Promo
-  get promo(): Promotion | undefined {
-    return this._promo;
-  }
-  set promo(value: Promotion | undefined) {
-    this._promo = value;
-  }
+  get interval(): number { return this._interval; }
+  set interval(v: number) { this._interval = v; }
 
-  // Media
-  get media(): Media | undefined {
-    return this._media;
-  }
-  set media(value: Media | undefined) {
-    this._media = value;
-  }
+  get media(): Media | undefined { return this._media; }
+  set media(v: Media | undefined) { this._media = v; }
 
-  // Visibility Rules
-  get visibilityRules(): VisibilityRule[] {
-    return this._visibilityRules;
-  }
-  set visibilityRules(value: VisibilityRule[]) {
-    this._visibilityRules = value;
-  }
+  get promotion(): Promotion | null | undefined { return this._promotion; }
+  set promotion(v: Promotion | null | undefined) { this._promotion = v; }
+
+  get visibilityRules(): VisibilityRule[] { return this._visibilityRules; }
+  set visibilityRules(v: VisibilityRule[]) { this._visibilityRules = v; }
 }

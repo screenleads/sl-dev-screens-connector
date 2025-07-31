@@ -17,6 +17,7 @@ export class DevicesService {
   public getIsRegisteredDevice: Signal<boolean> = this.isRegisteredDevice.asReadonly();
   public getDevice: Signal<any> = this.device.asReadonly();
   private config = inject(APP_CONFIG);
+  private _webSocketSrv = inject(WebsocketstompService);
 
   constructor(private _http: HttpClient, private _websocketSrv: WebsocketstompService, private _router: Router) {
     const storedDevice = localStorage.getItem('device');
@@ -39,6 +40,7 @@ export class DevicesService {
       this.device.set(device);
       this.isRegisteredDevice.set(true);
       localStorage.setItem('device', JSON.stringify(device));
+      this._webSocketSrv.joinRoom();
       this._router.navigate(['connect']);
     });
   }

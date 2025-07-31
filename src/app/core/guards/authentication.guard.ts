@@ -1,16 +1,15 @@
-import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
 import { AuthenticationService } from '../services/authentication/authentication.service';
 
-
-export const authenticationGuard: CanActivateFn = (route, state) => {
-  const auth = inject(AuthenticationService);
+export const authenticationGuard: CanActivateFn = () => {
+  const authService = inject(AuthenticationService);
   const router = inject(Router);
 
-  if (auth.isAuthenticated()) {
+  if (authService.isAuthenticated()) {
     return true;
   }
 
-  router.navigate(['/'], { queryParams: { returnUrl: state.url } });
+  router.navigate(['']);
   return false;
 };

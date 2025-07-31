@@ -1,48 +1,28 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { Credentials } from 'src/app/shared/models/credentials';
+import { AuthStore } from 'src/app/stores/auth.store';
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
-  private readonly tokenKey = 'access_token';
-  private readonly companyKey = 'company';
+  constructor(private authStore: AuthStore) {}
 
-  constructor(private router: Router) { }
-
-  loginSuccess(res: any) {
-    console.log(res);
-    console.log(res.token);
-    console.log(res.user);
-    console.log(res.user.company.id);
-    localStorage.setItem(this.tokenKey, res.token);
-    localStorage.setItem(this.companyKey, res.user.company.id);
+  login(credentials: Credentials) {
+    this.authStore.login(credentials);
   }
 
   logout() {
-    localStorage.removeItem(this.tokenKey);
-    this.router.navigate(['/login']);
+    this.authStore.logout();
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+  get isAuthenticated() {
+    return this.authStore.isLoggedIn;
   }
 
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    // Opcional: decodificar y validar expiración del token
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const now = Math.floor(Date.now() / 1000);
-      return payload.exp && payload.exp > now;
-    } catch (e) {
-      return false;
-    }
+  get currentUser() {
+    return this.authStore.user;
   }
 
-  getUserPayload(): any {
-    const token = this.getToken();
-    if (!token) return null;
-    return JSON.parse(atob(token.split('.')[1]));
+  get token(): string | null {
+    return this.authStore.token;
   }
 }

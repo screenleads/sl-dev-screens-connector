@@ -9,20 +9,25 @@ export const routes: Routes = [
   },
   {
     path: 'loading',
-    // do not use loadComponent here as you do not want to leak the internals of your feature into your app
     canActivate: [authenticationGuard],
-    loadChildren: () => import('./features/loading/loading.routes').then(feature => feature.loadingRoutes),
+    loadChildren: () => import('./features/loading/loading.routes').then(m => m.loadingRoutes),
   },
   {
     path: 'connect',
-    // do not use loadComponent here as you do not want to leak the internals of your feature into your app
     canActivate: [authenticationGuard],
-    loadChildren: () => import('./features/connection/connection.routes').then(feature => feature.connectionRoutes),
+    loadChildren: () => import('./features/connection/connection.routes').then(m => m.connectionRoutes),
   },
   {
     path: 'advices',
-    // do not use loadComponent here as you do not want to leak the internals of your feature into your app
     canActivate: [authenticationGuard],
-    loadChildren: () => import('./features/advices/advices.routes').then(feature => feature.advicesRoutes),
+    loadChildren: () => import('./features/advices/advices.routes').then(m => m.advicesRoutes),
   },
+  // {
+  //   path: 'not-found',
+  //   loadComponent: () => import('./shared/pages/not-found.page').then(m => m.NotFoundPage),
+  // },
+  {
+    path: '**',
+    redirectTo: 'not-found',
+  }
 ];
