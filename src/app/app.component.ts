@@ -1,8 +1,8 @@
 import { Component, effect, inject } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { DevicesService } from './features/loading/services/loading.service';
-import { WebsocketstompService } from './core/services/websocket/websocketstomp.service';
-
+import { WebsocketStompService } from './core/services/websocket/websocketstomp.service';
+import { WebsocketStateStore } from './stores/webscoket.store';
 
 
 @Component({
@@ -13,17 +13,18 @@ import { WebsocketstompService } from './core/services/websocket/websocketstomp.
 })
 export class AppComponent {
 
-  constructor(private _devicesSrv: DevicesService, private _websocketSrv: WebsocketstompService) {
-    effect(() => {
-      if (this._devicesSrv.deviceTypes().length > 0) {
-        console.log("REGISTRA EL DISPOSITIVO");
-        this._devicesSrv.registerDevice();
-      }
-    })
+  private deviceService = inject(DevicesService);
 
+  constructor() {
+    effect(() => {
+      if (this.deviceService.getDeviceTypes().length > 0 && !this.deviceService.getIsRegisteredDevice()) {
+        console.log('[AppComponent] Registrando dispositivo...');
+        this.deviceService.registerDevice();
+      }
+    });
   }
 
   ngOnInit() {
-    // this._devicesSrv.getDeviceTypes();
+    this.deviceService.fetchDeviceTypes();
   }
 }

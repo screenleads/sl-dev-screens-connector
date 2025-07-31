@@ -10,6 +10,8 @@ import { APP_CONFIG } from './environments/config/app-config.token';
 import { environment } from './environments/config/environment';
 import { File } from '@awesome-cordova-plugins/file/ngx';
 import { jwtInterceptor } from './app/core/interceptors/jwt.interceptor';
+import { LoggerModule, NGXLogger, NgxLoggerLevel } from 'ngx-logger';
+import { importProvidersFrom } from '@angular/core';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -19,5 +21,9 @@ bootstrapApplication(AppComponent, {
     provideHttpClient(withInterceptors([jwtInterceptor])),
     provideRouter(routes, withPreloading(PreloadAllModules)),
     { provide: APP_CONFIG, useValue: environment },
+    importProvidersFrom(LoggerModule.forRoot({
+      level: NgxLoggerLevel.DEBUG,
+      serverLogLevel: NgxLoggerLevel.OFF
+    }))
   ],
 });

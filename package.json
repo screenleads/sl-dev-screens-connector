@@ -50,6 +50,7 @@
     "ionicons": "^7.0.0",
     "luxon": "^3.7.1",
     "ng-qrcode": "^20.0.0",
+    "ngx-logger": "^5.0.12",
     "rxjs": "~7.8.0",
     "sl-dev-components": "^0.0.2",
     "sl-dev-design-system": "file:sl-dev-design-system-0.0.0.tgz",

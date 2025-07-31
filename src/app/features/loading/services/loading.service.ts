@@ -1,88 +1,100 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, Signal, signal, WritableSignal } from '@angular/core';
+import { inject, Injectable, Signal, WritableSignal, signal } from '@angular/core';
 import { v4 as uuidv4 } from 'uuid';
-import { firstValueFrom, lastValueFrom, map, toArray } from 'rxjs';
-import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
 import { APP_CONFIG } from 'src/environments/config/app-config.token';
 import { Router } from '@angular/router';
-@Injectable({
-  providedIn: 'root'
-})
+
+import { NGXLogger } from 'ngx-logger';
+import { WebsocketStompService } from 'src/app/core/services/websocket/websocketstomp.service';
+
+@Injectable({ providedIn: 'root' })
 export class DevicesService {
   private uuid = uuidv4();
-  private isRegisteredDevice: WritableSignal<boolean> = signal(false);
-  deviceTypes: WritableSignal<any[]> = signal([]);
   private device: WritableSignal<any> = signal(null);
+  private deviceTypes: WritableSignal<any[]> = signal([]);
+  private isRegisteredDevice: WritableSignal<boolean> = signal(false);
 
-  public getIsRegisteredDevice: Signal<boolean> = this.isRegisteredDevice.asReadonly();
   public getDevice: Signal<any> = this.device.asReadonly();
-  private config = inject(APP_CONFIG);
-  private _webSocketSrv = inject(WebsocketstompService);
+  public getDeviceTypes: Signal<any[]> = this.deviceTypes.asReadonly();
+  public getIsRegisteredDevice: Signal<boolean> = this.isRegisteredDevice.asReadonly();
 
-  constructor(private _http: HttpClient, private _websocketSrv: WebsocketstompService, private _router: Router) {
-    const storedDevice = localStorage.getItem('device');
-    if (storedDevice) {
-      const parsed = JSON.parse(storedDevice);
+  private http = inject(HttpClient);
+  private config = inject(APP_CONFIG);
+  private router = inject(Router);
+  private logger = inject(NGXLogger);
+  private wsService = inject(WebsocketStompService);
+
+  constructor() {
+    const stored = localStorage.getItem('device');
+    if (stored) {
+      const parsed = JSON.parse(stored);
       this.device.set(parsed);
+      this.uuid = parsed.uuid;
       this.isRegisteredDevice.set(true);
-      this._websocketSrv.initconnectionSocket(parsed.uuid);
-      let deviceAux = { ...this.device() };
-      this.uuid = deviceAux.uuid;
-      console.log("UUID::::::::::::::", this.uuid);
+      this.logger.info(`[DeviceService] Dispositivo encontrado con UUID: ${this.uuid}`);
+      this.wsService.connect(parsed.uuid);
     } else {
-      console.log("PRIMER USO DEL DISPOSITIVO UUID::::::::::::::", this.uuid);
+      this.logger.info(`[DeviceService] Primer uso. Generado UUID: ${this.uuid}`);
     }
   }
 
   registerDevice() {
-    return this._http.post(`${this.config.apiUrl}/devices`, this.createDeviceObject(), { responseType: 'json' }).subscribe((device: any) => {
-      this._websocketSrv.initconnectionSocket(device["uuid"]);
-      this.device.set(device);
-      this.isRegisteredDevice.set(true);
-      localStorage.setItem('device', JSON.stringify(device));
-      this._webSocketSrv.joinRoom();
-      this._router.navigate(['connect']);
+    const body = this.createDeviceObject();
+    this.http.post<any>(`${this.config.apiUrl}/devices`, body).subscribe({
+      next: (device) => {
+        this.logger.info('[DeviceService] Dispositivo registrado:', device);
+        this.device.set(device);
+        this.isRegisteredDevice.set(true);
+        localStorage.setItem('device', JSON.stringify(device));
+        this.wsService.connect(device.uuid);
+        this.wsService.joinRoom();
+        this.router.navigate(['/connect']);
+      },
+      error: (err) => this.logger.error('[DeviceService] Error al registrar dispositivo', err),
     });
   }
 
-  updateDeviceName(descriptionName: string) {
-    let deviceAux = { ...this.device() };
-    deviceAux["descriptionName"] = descriptionName;
-
-    return this._http.put(`${this.config.apiUrl}/devices/${deviceAux.id}`, deviceAux, { responseType: 'json' }).subscribe((device: any) => {
-      this.device.set(device);
-      localStorage.setItem('device', JSON.stringify(device));
+  updateDeviceName(name: string) {
+    const dev = { ...this.device(), descriptionName: name };
+    this.http.put<any>(`${this.config.apiUrl}/devices/${dev.id}`, dev).subscribe({
+      next: (updated) => {
+        this.device.set(updated);
+        localStorage.setItem('device', JSON.stringify(updated));
+        this.logger.info('[DeviceService] Nombre del dispositivo actualizado');
+      },
+      error: (err) => this.logger.error('[DeviceService] Error actualizando nombre del dispositivo', err),
     });
   }
 
-  getDeviceTypes() {
-    this._http.get<any[]>(`${this.config.apiUrl}/devices/types`).subscribe((deviceTypes: any) => {
-      this.deviceTypes.set(deviceTypes);
+  fetchDeviceTypes() {
+    this.http.get<any[]>(`${this.config.apiUrl}/devices/types`).subscribe({
+      next: (types) => {
+        this.deviceTypes.set(types);
+        this.logger.debug('[DeviceService] Tipos de dispositivos cargados');
+      },
+      error: (err) => this.logger.error('[DeviceService] Error cargando tipos de dispositivos', err),
     });
   }
 
-  createDeviceObject() {
-
+  private createDeviceObject() {
     const width = window.innerWidth;
-    const company = localStorage.getItem('company');
     const height = window.innerHeight;
-    let deviceType;
+    const company = localStorage.getItem('company');
+    const types = this.deviceTypes();
 
-    if (width <= 768) {
-      deviceType = this.deviceTypes().find(a => a.type === "mobile");
-    } else if (width <= 1024) {
-      deviceType = this.deviceTypes().find(a => a.type === "tablet");
-    } else {
-      deviceType = this.deviceTypes().find(a => a.type === "tv");
-    }
+    const type = width <= 768
+      ? types.find(t => t.type === 'mobile')
+      : width <= 1024
+        ? types.find(t => t.type === 'tablet')
+        : types.find(t => t.type === 'tv');
 
     return {
       uuid: this.uuid,
       descriptionName: '',
       width,
       height,
-      type: deviceType,
-      company: { id: company }
+      type,
+      company: { id: company },
     };
   }
 }
