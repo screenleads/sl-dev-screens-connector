@@ -9,12 +9,12 @@
       </sl-module-title>
 
       <sl-text-field [label]="'El nombre del dispositivo'">
-        <input slNativeControl type="text" [(ngModel)]="descriptionName" />
+        <input slNativeControl type="text" [(ngModel)]="deviceName" />
         <sl-icon slTextFieldEnd icon="aod"></sl-icon>
       </sl-text-field>
     </div>
 
-    <button sl-button variant="primary" size="medium" (click)="updateDevice()">
+    <button sl-button variant="primary" size="medium" (click)="saveNameAndContinue()">
       <!-- <sl-icon icon="search"></sl-icon> -->
       Guardar
       <sl-icon icon="save"></sl-icon>

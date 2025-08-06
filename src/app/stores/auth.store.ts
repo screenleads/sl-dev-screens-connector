@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { interval } from 'rxjs';
 import { NGXLogger } from 'ngx-logger';
 
-import { Credentials } from 'src/app/shared/models/credentials';
+import { Credentials } from 'src/app/shared/models/Credentials';
 import { LoginResponse } from 'src/app/shared/models/LoginResponse';
 import { User } from 'src/app/shared/models/user';
 import { environment } from 'src/environments/config/environment';
@@ -31,7 +31,7 @@ export class AuthStore {
       this.scheduleTokenCheck();
       setTimeout(() => this.fetchUserProfile());
     } else {
-      this.logger.warn('[AuthStore] No hay token al iniciar');
+      this.logger.warn('[AuthStore] No hay token al iniciar se redirigira al Login');
     }
   }
 

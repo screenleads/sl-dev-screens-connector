@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, inject, Injectable } from '@angular/core';
-import { DevicesService } from '../../loading/services/loading.service';
 import { map, Observable } from 'rxjs';
 import { Advice } from '../model/Advice';
 import { APP_CONFIG } from 'src/environments/config/app-config.token';
@@ -9,7 +8,7 @@ import { APP_CONFIG } from 'src/environments/config/app-config.token';
 })
 export class AdvicesService {
 
-  constructor(private _http: HttpClient, private _devicesSrv: DevicesService) { }
+  constructor(private _http: HttpClient) { }
   private config = inject(APP_CONFIG);
 
   getAdvices() {

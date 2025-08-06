@@ -1,7 +1,8 @@
-import { Authority } from "./authority";
-import { Company } from "./company";
+import { Authority } from "./Authority";
+import { Company } from "./Company";
 import { Media } from "./media";
-import { Role } from "./role";
+import { Role } from "./Role";
+
 
 
 export class User {

@@ -1,44 +1,61 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, effect, signal, WritableSignal } from '@angular/core';
+import { Router } from '@angular/router';
+import { NGXLogger } from 'ngx-logger';
+import { DeviceStore } from 'src/app/stores/device.store';
+
+import {
+  SlButtonComponent,
+  SlIconComponent,
+  SlModuleTitleComponent,
+  SlTextFieldModule
+} from 'sl-dev-components';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
-import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
-import { DevicesService } from 'src/app/features/loading/services/loading.service';
-import { Router } from '@angular/router';
-import { SlButtonComponent, SlIconComponent, SlModuleTitleComponent, SlTextFieldModule } from 'sl-dev-components';
-import { Filesystem } from '@capacitor/filesystem';
+import { IonContent } from '@ionic/angular/standalone';
+
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.page.html',
   styleUrls: ['./connection.page.scss'],
   standalone: true,
-  imports: [IonContent, CommonModule, FormsModule, SlButtonComponent, SlTextFieldModule, SlIconComponent, SlModuleTitleComponent]
+  imports: [
+    CommonModule,
+    FormsModule,
+    SlButtonComponent,
+    SlTextFieldModule,
+    SlIconComponent,
+    SlModuleTitleComponent,
+    IonContent
+  ]
 })
-export class ConnectionPage implements OnInit {
-  descriptionName = "";
-  constructor(private _router: Router, private _websocketSrv: WebsocketstompService, private _devicesSrv: DevicesService) { }
+export class ConnectionPage {
+  private deviceStore = inject(DeviceStore);
+  private router = inject(Router);
+  private logger = inject(NGXLogger);
 
-  async ngOnInit() {
-    await this.requestFilesystemPermissions();
-    this.descriptionName = this._devicesSrv.getDevice().descriptionName;
-    // luego tu lógica actual
-  }
-  async requestFilesystemPermissions(): Promise<void> {
-    try {
-      const result = await Filesystem.requestPermissions();
+  device = this.deviceStore.device;
+  deviceName: WritableSignal<string> = signal('');
 
-      if (result.publicStorage === 'granted') {
-        console.log('✅ Permisos de almacenamiento concedidos');
-      } else {
-        console.warn('❌ Permisos de almacenamiento denegados');
+  constructor() {
+    effect(() => {
+      const currentDevice = this.device();
+      if (currentDevice) {
+        this.deviceName.set(currentDevice.descriptionName || '');
+        this.logger.debug('[ConnectionPage] Dispositivo cargado:', currentDevice);
       }
-    } catch (error) {
-      console.error('❌ Error al solicitar permisos:', error);
-    }
-  }
-  updateDevice() {
-    this._devicesSrv.updateDeviceName(this.descriptionName);
-    this._router.navigate(["/advices"]);
+    });
   }
 
+  saveNameAndContinue() {
+    const name = this.deviceName();
+    if (!name.trim()) {
+      this.logger.warn('[ConnectionPage] Nombre vacío, no se puede continuar');
+      return;
+    }
+
+    this.logger.info('[ConnectionPage] Guardando nombre del dispositivo:', name);
+    this.deviceStore.updateDeviceName(name);
+    this.router.navigate(['/advices']);
+  }
 }

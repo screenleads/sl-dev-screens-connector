@@ -45,46 +45,95 @@
 
 
 * {
-    font-family: var(--sl-font-secondary-font-fa);
+  font-family: var(--sl-font-secondary-font-fa);
 }
 
 
 .content-ver {
-    padding: 6rem;
-    width: 100%;
-    min-height: 100vw;
-    background-color: var(--sl-color-neutrals-100);
-    display: flex;
-    justify-content: space-between;
-    flex-direction: column;
-    position: absolute;
-    z-index: 999;
+  padding: 6rem;
+  width: 100%;
+  min-height: 100vw;
+  background-color: var(--sl-color-neutrals-100);
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  position: absolute;
+  z-index: 999;
 }
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-internal-autofill-selected {
-  box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
-  background-color:  var(--sl-color-neutrals-100) !important;
-  -webkit-box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
+  box-shadow: 0 0 0 1000px var(--sl-color-neutrals-100) inset !important;
+  background-color: var(--sl-color-neutrals-100) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--sl-color-neutrals-100) inset !important;
   -webkit-text-fill-color: inherit !important;
   caret-color: inherit !important;
   transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
-    -webkit-text-fill-color: #d1ff00 !important; // o el color que necesites
+  -webkit-text-fill-color: #d1ff00 !important; // o el color que necesites
   caret-color: #d1ff00; // color del cursor
 }
 
 :host {
   ::ng-deep input:-webkit-autofill {
-  box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
-  background-color:  var(--sl-color-neutrals-100) !important;
-  -webkit-box-shadow: 0 0 0 1000px  var(--sl-color-neutrals-100) inset !important;
-  -webkit-text-fill-color: inherit !important;
-  caret-color: inherit !important;
-  transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
-    -webkit-text-fill-color:  var(--sl-color-primary-100) !important; // o el color que necesites
-  caret-color:  var(--sl-color-primary-100); // color del cursor
+    box-shadow: 0 0 0 1000px var(--sl-color-neutrals-100) inset !important;
+    background-color: var(--sl-color-neutrals-100) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--sl-color-neutrals-100) inset !important;
+    -webkit-text-fill-color: inherit !important;
+    caret-color: inherit !important;
+    transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
+    -webkit-text-fill-color: var(--sl-color-primary-100) !important; // o el color que necesites
+    caret-color: var(--sl-color-primary-100); // color del cursor
 
+  }
+}
+
+ion-toast {
+  transform: rotate(90deg);
+  transform-origin: top left;
+  position: absolute !important;
+  top: 0 !important;
+  left: 99vw !important;
+
+  width: 100vh !important;
+  max-width: 100vh !important;
+
+  --width: 100vh !important;
+  --max-width: 100vh !important;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  --background: #d1ff00 !important;
+
+
+  // ✅ Texto oscuro para contraste
+  color: #000 !important;
+
+  // ✅ Opcional: sombra para mejorar visibilidad
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+
+  .toast-message {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 2.4rem;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    width: 100% !important;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  &::part(message) {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 2.4rem;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    width: 100% !important;
+    max-width: 100vh !important;
+    box-sizing: border-box;
+    text-align: center;
   }
 }

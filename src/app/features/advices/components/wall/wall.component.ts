@@ -18,12 +18,12 @@ import {
 import { LeadInfoComponent } from '../lead-info/lead-info.component';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { VideoStorageService } from '../../services/video-storage.service';
 import CapacitorBlobWriter from 'capacitor-blob-writer';
-import { WebsocketstompService } from 'src/app/core/services/websocket/websocketstomp.service';
-import { DevicesService } from 'src/app/features/loading/services/loading.service';
 import { DateTime } from 'luxon';
+import { WallSyncService } from 'src/app/shared/services/wall-sync.service';
+import { DeviceStore } from 'src/app/stores/device.store';
 @Component({
   selector: 'app-wall',
   templateUrl: './wall.component.html',
@@ -51,14 +51,15 @@ export class WallComponent implements OnInit {
   public progress = 0;
   public total = 0;
   public errorMessage: string | null = null;
+  private refreshSub!: Subscription;
   constructor(
     private _advicesSrv: AdvicesService,
-    private _devicesSrv: DevicesService,
     private changeDetector: ChangeDetectorRef,
     private videoStorageSrv: VideoStorageService,
-    private _webSocketSrv: WebsocketstompService
+    private wallSync: WallSyncService,
+    private deviceStore: DeviceStore
   ) {
-   
+
 
   }
 
@@ -71,41 +72,69 @@ export class WallComponent implements OnInit {
     }, 8000); // mensaje visible por 8 segundos
   }
   async ngOnInit() {
-    console.log("→ Obteniendo advices...", this._devicesSrv.getDevice());
+    // console.log("→ Obteniendo advices...", this._devicesSrv.getDevice());
 
-    this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisiblesByDevice(this._devicesSrv.getDevice().id));
-    this.total = this.advices.length;
-    console.log(this.advices.length);
-    if (this.total > 0) {
-      for (const advice of this.advices) {
-        try {
-          await this.downloadVideoToTV(advice);
-          this.progress++;
-        } catch (err) {
-          console.error('Error al descargar', advice.id, err);
-          this.showAlert('❌ Error al descargar: ' + (err));
+    await this.refreshAdviceList();
+
+
+  }
+
+  async refreshAdviceList() {
+    try {
+      this.advices = [];
+      this.currentAdvice = undefined;
+      this.currentIndex = 0;
+      this.played = false;
+      this.loaded = false;
+      this.videoSrc = null;
+      this.progress = 0;
+      this.total = 0;
+      const device = this.deviceStore.device();
+      if (!device) {
+        this.showAlert('❌ Dispositivo no registrado');
+        return;
+      }
+      this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisiblesByDevice(device.id));
+      this.refreshSub = this.wallSync.refreshAds$.subscribe(() => {
+        this.refreshAdviceList();
+      });
+      this.total = this.advices.length;
+      console.log(this.advices.length);
+      if (this.total > 0) {
+        for (const advice of this.advices) {
+          try {
+            await this.downloadVideoToTV(advice);
+            this.progress++;
+          } catch (err) {
+            console.error('Error al descargar', advice.id, err);
+            this.showAlert('❌ Error al descargar: ' + (err));
+          }
         }
+
+        console.log("✅ Todos los videos listos");
+        let attempts = 0;
+        let nextIndex = 0;
+        let nextAdvice = this.advices[nextIndex];
+        while (!this.isAdviceVisible(nextAdvice) && attempts < this.advices.length) {
+          nextIndex = (nextIndex + 1) % this.advices.length;
+          nextAdvice = this.advices[nextIndex];
+          attempts++;
+        }
+        this.currentAdvice = nextAdvice;
+
+        await this.preloadNextVideo(this.mainVideoRef.nativeElement, nextAdvice);
+        this.advanceIndex();
       }
 
-      console.log("✅ Todos los videos listos");
-      let attempts = 0;
-      let nextIndex = 0;
-      let nextAdvice = this.advices[nextIndex];
-      while (!this.isAdviceVisible(nextAdvice) && attempts < this.advices.length) {
-        nextIndex = (nextIndex + 1) % this.advices.length;
-        nextAdvice = this.advices[nextIndex];
-        attempts++;
-      }
-      this.currentAdvice = nextAdvice;
+      this.loaded = true;
 
-      await this.preloadNextVideo(this.mainVideoRef.nativeElement, nextAdvice);
-      this.advanceIndex();
+    } catch (err) {
+      this.showAlert('❌ Error actualizando anuncios: ' + err);
     }
+  }
 
-    this.loaded = true;
-
-
-
+  ngOnDestroy() {
+    this.refreshSub?.unsubscribe();
   }
   blobToBase64(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -137,6 +166,7 @@ export class WallComponent implements OnInit {
   async saveVideoBlob(blob: Blob, fileName: string): Promise<string> {
     const dir = 'videos';
     const path = `${dir}/${fileName}`;
+
     try {
       await Filesystem.mkdir({
         path: dir,
@@ -144,23 +174,51 @@ export class WallComponent implements OnInit {
         recursive: true,
       });
     } catch (error: any) {
-      // ⚠️ Ignorar si el error indica que la carpeta ya existe
-      if (!error?.message?.includes('already exists')) {
-        console.error('❌ Error creando carpeta:', error);
-        this.showAlert('❌ Error al crear la carpeta: ' + (error));
+      const msg = error?.message?.toLowerCase() || '';
+      const iosConflict = error?.code === '12'; // iOS sometimes uses code 12 for file exists
+      const androidConflict = msg.includes('already exists') || msg.includes('cannot be overwritten');
 
+      if (!iosConflict && !androidConflict) {
+        console.error('❌ Error creando carpeta:', error);
+        this.showAlert('❌ Error al crear la carpeta: ' + error);
         throw error;
+      } else {
+        console.warn('📁 Carpeta ya existe, continuando...');
       }
     }
+
     await CapacitorBlobWriter({
       path,
-      directory: Directory.Cache, // o 'DOCUMENTS'
+      directory: Directory.Cache,
       blob,
     });
 
     const localUrl = Capacitor.convertFileSrc(path);
     return localUrl;
   }
+
+
+  private async ensureVideoDirectoryExists(dir: string): Promise<void> {
+    try {
+      await Filesystem.mkdir({
+        path: dir,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+      console.log(`📁 Carpeta '${dir}' creada exitosamente`);
+    } catch (error: any) {
+      const msg = error?.message || '';
+      if (msg.includes('does already exist')) {
+        console.warn(`📁 Carpeta '${dir}' ya existe. Continuando...`);
+        return;
+      }
+
+      console.error('❌ Error creando carpeta:', error);
+      this.showAlert('❌ Error al crear la carpeta: ' + msg);
+      throw error;
+    }
+  }
+
 
   playAdvices() {
     this.playAdviceLoop();
