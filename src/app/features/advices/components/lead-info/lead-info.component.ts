@@ -1,7 +1,8 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit } from '@angular/core';
 import { QrCodeComponent } from 'ng-qrcode';
 import { Advice } from '../../model/Advice';
 import { NgIf } from '@angular/common';
+import { NGXLogger } from 'ngx-logger';
 @Component({
   selector: 'app-lead-info',
   templateUrl: './lead-info.component.html',
@@ -12,11 +13,17 @@ import { NgIf } from '@angular/common';
 })
 export class LeadInfoComponent implements OnInit {
   @Input() advice: Advice | undefined;
+  private logger = inject(NGXLogger);
+
   constructor() { }
 
-  ngOnInit() { }
+  ngOnInit() {
+    this.logger.info('[WebsocketEventHandler] Advice Recibido', this.advice);
+
+  }
   formatUrl() {
     // return  this.advice?.getPromo()?.getUrlPromo();
+    return 'https://example.com/legal'
     return "";
   }
 }

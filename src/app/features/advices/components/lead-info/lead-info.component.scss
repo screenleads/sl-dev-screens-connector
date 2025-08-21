@@ -1,6 +1,54 @@
-#lead-info{
+#lead-info {
     width: 100%;
     height: auto;
-    min-height: 4vh;
-    background: var( --sl-color-neutrals-90);
+    min-height: 10vh;
+    background: var(--sl-color-neutrals-90);
+    position: absolute;
+    z-index: 99;
+    left: 0;
+    bottom: 0;
+
+    #qr-container {
+        position: absolute;
+        left: 2vh;
+        bottom: 2vh;
+        width: 15vh;
+        background-color: aqua;
+
+
+    }
+
+    &-content {
+        display: flex;
+        width: 81vh;
+        margin-left: 19vh;
+        vertical-align: middle;
+        align-items: center;
+
+        .legal-text {
+            font-size: 0.571rem;
+            line-height: normal;
+            width: 70%;
+            padding: 1vh;
+            color: #fff;
+        }
+
+        #logo {
+            width: 30%;
+            padding: 5%;
+            height: 13vh;
+
+            img {
+                width: 80%;
+                margin: auto;
+                display: block;
+            }
+        }
+    }
+}
+
+::ng-deep #qr-container canvas {
+    width: 100% !important;
+    height: auto !important;
+    display: block;
 }

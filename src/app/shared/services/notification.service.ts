@@ -40,4 +40,15 @@ export class NotificationService {
                 return 'primary'; // fallback
         }
     }
+
+    showForceUpdate(url: string) {
+        alert('Versión obsoleta. Actualización obligatoria.');
+        window.open(url, '_system'); // o usar Capacitor Browser
+    }
+
+    showOptionalUpdate(url: string) {
+        if (confirm('Hay una nueva versión. ¿Quieres actualizar?')) {
+            window.open(url, '_system');
+        }
+    }
 }

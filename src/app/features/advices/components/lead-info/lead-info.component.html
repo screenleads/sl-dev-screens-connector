@@ -1,5 +1,17 @@
 <footer id="lead-info">
-  <qr-code *ngIf="advice!=undefined" [value]="formatUrl()" 
-         size="300" 
-         errorCorrectionLevel="M" />
+  <div id="qr-container">
+    <qr-code [value]="formatUrl()" errorCorrectionLevel="M" />
+  </div>
+  <div id="lead-info-content">
+    <p class="legal-text">
+      La promoción visualizada en esta pantalla está sujeta a una serie de términos y condiciones legales que podras
+      consultar en el siguiente enlace.
+      <span [innerHTML]="advice?.promotion?.legalUrl">
+
+      </span>.
+    </p>
+    <div id="logo">
+      <img src="./assets/images/logo-hor.svg" />
+    </div>
+  </div>
 </footer>
