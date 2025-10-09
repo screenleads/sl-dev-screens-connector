@@ -5,6 +5,9 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { NotificationService } from './notification.service';
 import { environment } from '../../../environments/config/environment';
+import { Device } from '@capacitor/device';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Permissions } from '@capacitor/permissions';
 
 @Injectable({ providedIn: 'root' })
 export class AppVersionService {
@@ -13,9 +16,21 @@ export class AppVersionService {
     private notifier = inject(NotificationService);
 
     async checkForUpdates() {
-
         this.logger.info('[AppVersionService] Comprobando versión de la app...');
-        const platform = Capacitor.getPlatform(); // 'ios', 'android', 'web', etc.
+        const platform = Capacitor.getPlatform();
+        const deviceInfo = await Device.getInfo();
+
+        if (platform === 'android' && deviceInfo.model?.toLowerCase().includes('tv')) {
+            this.logger.info('[AppVersionService] Dispositivo detectado: Smart TV con Android.');
+        }
+
+        if (await this.checkAndRequestPermissions()) {
+            this.logger.info('[AppVersionService] Permisos concedidos.');
+        } else {
+            this.logger.warn('[AppVersionService] Permisos denegados. No se puede proceder con la descarga.');
+            return;
+        }
+
         if (typeof platform === 'string' && isNaN(Number(platform))) {
             this.logger.info(`[AppVersionService] Plataforma '${platform}' detectada, usando endpoint /app-versions/latest/${platform} ...`);
             const appInfo = await App.getInfo();
@@ -79,15 +94,44 @@ export class AppVersionService {
         });
     }
 
-    private downloadFile(url: string) {
-        // Crea un enlace temporal y simula un click para descargar el archivo
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '';
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+    private async checkAndRequestPermissions(): Promise<boolean> {
+        try {
+            const status = await Permissions.query({ name: 'filesystem' });
+            if (status.state !== 'granted') {
+                const requestStatus = await Permissions.request({ name: 'filesystem' });
+                return requestStatus.state === 'granted';
+            }
+            return true;
+        } catch (error) {
+            this.logger.error('[AppVersionService] Error al comprobar o solicitar permisos:', error);
+            return false;
+        }
+    }
+
+    private async downloadFile(url: string) {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const reader = new FileReader();
+
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+                const fileName = url.split('/').pop() || 'update.apk';
+
+                await Filesystem.writeFile({
+                    path: fileName,
+                    data: base64data.split(',')[1], // Remove the base64 prefix
+                    directory: Directory.Documents,
+                    encoding: Encoding.UTF8
+                });
+
+                this.logger.info(`[AppVersionService] Archivo descargado y guardado como ${fileName}`);
+            };
+
+            reader.readAsDataURL(blob);
+        } catch (error) {
+            this.logger.error('[AppVersionService] Error al descargar el archivo:', error);
+        }
     }
 
     private isVersionLower(current: string, target: string): boolean {
