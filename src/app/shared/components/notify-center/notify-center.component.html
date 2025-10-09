@@ -1,0 +1,6 @@
+<div class="notify-container" *ngIf="items().length">
+  <div *ngFor="let n of items()" [class]="classFor(n.level)">
+    <div class="text">{{ n.text }}</div>
+    <button class="close" (click)="dismiss(n.id)" aria-label="Cerrar">×</button>
+  </div>
+</div>

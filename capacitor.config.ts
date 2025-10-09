@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'sl-dev-screens-connector',
+  appName: 'ScreenLeads Connector',
   webDir: 'www',
   plugins: {
     SplashScreen: {

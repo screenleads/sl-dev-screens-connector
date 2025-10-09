@@ -1,46 +1,67 @@
 #wall {
-    background: #2A7B9B;
-    background: linear-gradient(180deg, var(--sl-color-neutrals-90) 0%, var(--sl-color-neutrals-90) 80%, var(--sl-color-primary-150) 100%);
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
+    /* toda la pantalla */
+    background: linear-gradient(180deg,
+            var(--sl-color-neutrals-90) 0%,
+            var(--sl-color-neutrals-90) 80%,
+            var(--sl-color-primary-150) 100%);
     display: flex;
     flex-direction: column;
-
-    &-advice-content {
-        width: 100%;
-        height: 100%;
-        background: var(--sl-color-neutrals-100);
-
-        img {
-            width: 100%;
-            height: 100%;
-        }
-    }
+    position: relative;
 }
 
+/* Contenedor donde se pinta el anuncio (vídeo o imagen) */
+#wall-advice-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    /* fondo negro para evitar bordes visibles */
+    overflow: hidden;
+}
+
+/* Estados de visibilidad para el doble buffer de vídeos */
 .hide {
     opacity: 0;
 }
 
+/* Evita que reglas genéricas interfieran */
 video {
-    width: 100%;
+    width: auto;
 }
 
+/* Elemento media (vídeo o imagen) ocupando TODA la pantalla sin deformarse
+   (recorta si es necesario). Centrado por object-fit: cover */
 .media-advice {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
+    /* top/right/bottom/left: 0 */
     width: 100%;
     height: 100%;
-    opacity: 1;
+    object-fit: cover;
+    /* llenar pantalla sin deformar (puede recortar) */
+    background: #000;
+
     z-index: 9;
+    pointer-events: none;
+
+    /* opcional: crossfade suave entre main/buffer */
+    opacity: 0;
+    transition: opacity 220ms ease-in-out;
 
     &.visible {
+        opacity: 1;
         z-index: 99;
-
     }
 }
 
+/* La imagen se comporta igual que el vídeo */
+.media-image {
+    /* hereda de .media-advice */
+}
+
+/* Barra de progreso de descargas */
 .progress-container {
     width: 100%;
     background-color: #e0e0e0;
@@ -52,12 +73,13 @@ video {
 
 .progress-bar {
     height: 100%;
-    background-color: #532CE0; // o el color principal de tu marca
+    background-color: #532CE0;
     transition: width 0.3s ease;
 }
 
+/* Mensaje de error visible encima de todo */
 .video-alert {
-    position: absolute;
+    position: fixed;
     bottom: 20px;
     left: 20px;
     background-color: rgba(255, 0, 0, 0.9);

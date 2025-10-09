@@ -8,39 +8,47 @@
         <span slModuleTitlePost *ngIf="advices.length<=0 && loaded">Revisa tu administrador</span>
 
         <h1 *ngIf="advices.length>0 && loaded">Contenido cargado</h1>
-        <span *ngIf="advices.length>0 && loaded" slModuleTitlePost>¿Quieres empezar a reproducir tu contenido en este
-          dispositivo?</span>
+        <span *ngIf="advices.length>0 && loaded" slModuleTitlePost>
+          ¿Quieres empezar a reproducir tu contenido en este dispositivo?
+        </span>
+
         <div class="progress-container" *ngIf="advices.length > 0 && !loaded">
           <div class="progress-bar" [style.width.%]="(progress / total) * 100"></div>
         </div>
         <p *ngIf="advices.length > 0 && !loaded">{{progress}} / {{total}} videos descargados</p>
       </sl-module-title>
-
-
     </div>
+
     <img *ngIf="advices.length<=0 && loaded"
-      src="https://firebasestorage.googleapis.com/v0/b/screenleads-e7e0b.firebasestorage.app/o/Lid-sad.png?alt=media&token=600fb5f9-ff6b-4083-a6bf-c503e8ee6cd3" />
+      src="https://firebasestorage.googleapis.com/v0/b/screenleads-e7e0b.firebasestorage.app/o/Lid-sad.png?alt=media&token=b55cf5fe-3639-45cd-8a13-5ac147c6f170" />
+
     <img *ngIf="advices.length<=0 && !loaded"
-      src="https://firebasestorage.googleapis.com/v0/b/screenleads-e7e0b.firebasestorage.app/o/Lid-happy.png?alt=media&token=d2353caf-feb0-4387-b3f1-43bb909a9d11" />
+      src="https://firebasestorage.googleapis.com/v0/b/screenleads-e7e0b.firebasestorage.app/o/Lid-happy.png?alt=media&token=7dd55085-b425-4fe3-ae19-ce68683bdabf" />
+
     <button sl-button variant="primary" size="medium" *ngIf="advices.length>0 && loaded" (click)="playAdvices()">
-      <!-- <sl-icon icon="search"></sl-icon> -->
       Empezar
       <sl-icon icon="slideshow"></sl-icon>
-
     </button>
   </div>
+
   <div id="wall-advice-content" #wall>
-
+    <!-- Vídeo principal -->
     <video #mainVideo preload="auto" autoplay muted playsinline class="media-advice"
-      [ngClass]="{'visible':currentIndex % 2 === 0}"></video>
+      [ngClass]="{'visible': currentIndex % 2 === 0}">
+    </video>
 
+    <!-- Vídeo buffer -->
     <video #bufferVideo preload="auto" autoplay muted playsinline class="media-advice"
-      [ngClass]="{'visible':currentIndex % 2 != 0}"></video>
+      [ngClass]="{'visible': currentIndex % 2 !== 0}">
+    </video>
 
-
-    <img *ngIf="getMediaCategory(currentAdvice?.media?.type?.type!) == 'image'" src="{{currentAdvice?.media?.src}}" />
+    <!-- Imagen (si el media actual es imagen) -->
+    <img *ngIf="getMediaCategory(currentAdvice?.media?.type?.type!) === 'image'" [src]="currentAdvice?.media?.src"
+      class="media-advice media-image visible" />
   </div>
-  <app-lead-info *ngIf="currentAdvice?.promotion!= null" [advice]="currentAdvice"></app-lead-info>
+
+  <app-lead-info *ngIf="currentAdvice?.promotion != null" [advice]="currentAdvice"></app-lead-info>
+
   <div *ngIf="errorMessage" class="video-alert">
     {{ errorMessage }}
   </div>

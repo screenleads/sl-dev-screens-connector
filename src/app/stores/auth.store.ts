@@ -5,13 +5,13 @@ import { interval } from 'rxjs';
 import { NGXLogger } from 'ngx-logger';
 
 import { Credentials } from 'src/app/shared/models/Credentials';
-import { LoginResponse } from 'src/app/shared/models/LoginResponse';
-import { User } from 'src/app/shared/models/user';
+import { JwtResponse, UserDto } from 'src/app/shared/models/LoginResponse';
 import { environment } from 'src/environments/config/environment';
+import { AppVersionService } from 'src/app/shared/services/app-version.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
-  private readonly _user = signal<User | null>(null);
+  private readonly _user = signal<UserDto | null>(null);
   private readonly _token = signal<string | null>(localStorage.getItem('access_token'));
   private _tokenExpiration: number | null = null;
   private _tokenIssuedAt: number | null = null;
@@ -22,6 +22,7 @@ export class AuthStore {
   private http = inject(HttpClient);
   private router = inject(Router);
   private logger = inject(NGXLogger);
+  private appVersionService = inject(AppVersionService);
 
   constructor() {
     this.logger.debug('[AuthStore] Inicializado');
@@ -36,13 +37,22 @@ export class AuthStore {
   }
 
   login(credentials: Credentials) {
-    this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, credentials.toJSON())
+    this.http.post<JwtResponse>(`${environment.apiUrl}/auth/login`, credentials.toJSON())
       .subscribe({
         next: res => {
-          const loginData = new LoginResponse(res);
-          this._token.set(loginData.token);
-          this._user.set(new User(loginData.user));
-          localStorage.setItem('access_token', loginData.token);
+          this._token.set(res.accessToken);
+          this._user.set(res.user ?? null);
+          localStorage.setItem('access_token', res.accessToken);
+          if (res.user) {
+            localStorage.setItem('user', JSON.stringify(res.user));
+            if (res.user.company) {
+              localStorage.setItem('company', JSON.stringify(res.user.company));
+            } else {
+              localStorage.removeItem('company');
+            }
+            // Llamar a checkForUpdates tras guardar el usuario
+            this.appVersionService.checkForUpdates();
+          }
           this.decodeTokenMetadata();
           this.scheduleTokenCheck();
           this.logger.info('[AuthStore] Login exitoso');
@@ -64,10 +74,18 @@ export class AuthStore {
 
   private fetchUserProfile() {
     this.logger.debug('[AuthStore] Obteniendo perfil de usuario...');
-    this.http.get<User>(`${environment.apiUrl}/auth/me`).subscribe({
+    this.http.get<UserDto>(`${environment.apiUrl}/auth/me`).subscribe({
       next: res => {
         this.logger.info('[AuthStore] Perfil cargado');
-        this._user.set(new User(res));
+        this._user.set(res);
+        localStorage.setItem('user', JSON.stringify(res));
+        if (res.company) {
+          localStorage.setItem('company', JSON.stringify(res.company));
+        } else {
+          localStorage.removeItem('company');
+        }
+        // Llamar a checkForUpdates tras guardar el usuario
+        this.appVersionService.checkForUpdates();
       },
       error: err => {
         this.logger.error('[AuthStore] Error al obtener perfil. Cerrando sesión', err);
@@ -125,13 +143,13 @@ export class AuthStore {
 
   private refreshToken() {
     this.logger.debug('[AuthStore] Solicitando renovación de token...');
-    this.http.post<LoginResponse>(`${environment.apiUrl}/auth/refresh`, {})
+    this.http.post<JwtResponse>(`${environment.apiUrl}/auth/refresh`, {})
       .subscribe({
         next: res => {
-          const refreshData = new LoginResponse(res);
-          this._token.set(refreshData.token);
-          this._user.set(new User(refreshData.user));
-          localStorage.setItem('access_token', refreshData.token);
+          this._token.set(res.accessToken);
+          this._user.set(res.user ?? null);
+          localStorage.setItem('access_token', res.accessToken);
+          if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
           this.decodeTokenMetadata();
           this.logger.info('[AuthStore] Token renovado correctamente');
         },

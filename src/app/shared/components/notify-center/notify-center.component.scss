@@ -1,0 +1,64 @@
+.notify-container {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.notify-item {
+    min-width: 260px;
+    max-width: 420px;
+    padding: 12px 40px 12px 12px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+    font-size: 14px;
+    line-height: 1.2;
+    pointer-events: auto;
+    position: relative;
+    opacity: .98;
+}
+
+.notify-item.info {
+    background: #1e293b;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+}
+
+.notify-item.success {
+    background: #064e3b;
+    color: #d1fae5;
+    border: 1px solid #065f46;
+}
+
+.notify-item.warning {
+    background: #7c2d12;
+    color: #ffedd5;
+    border: 1px solid #9a3412;
+}
+
+.notify-item.danger {
+    background: #7f1d1d;
+    color: #fee2e2;
+    border: 1px solid #991b1b;
+}
+
+.notify-item .close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+    opacity: .8;
+}
+
+.notify-item .close:hover {
+    opacity: 1;
+}

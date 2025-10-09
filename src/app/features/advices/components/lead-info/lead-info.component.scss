@@ -1,7 +1,6 @@
 #lead-info {
     width: 100%;
     height: auto;
-    min-height: 10vh;
     background: var(--sl-color-neutrals-90);
     position: absolute;
     z-index: 99;
@@ -10,9 +9,9 @@
 
     #qr-container {
         position: absolute;
-        left: 2vh;
-        bottom: 2vh;
-        width: 15vh;
+        left: 3vw;
+        bottom: 3vw;
+        width: 18vw;
         background-color: aqua;
 
 
@@ -20,7 +19,6 @@
 
     &-content {
         display: flex;
-        width: 81vh;
         margin-left: 19vh;
         vertical-align: middle;
         align-items: center;
@@ -36,7 +34,7 @@
         #logo {
             width: 30%;
             padding: 5%;
-            height: 13vh;
+            // height: 13vh;
 
             img {
                 width: 80%;

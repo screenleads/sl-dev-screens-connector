@@ -52,7 +52,7 @@
 .content-ver {
   padding: 6rem;
   width: 100%;
-  min-height: 100vw;
+  min-height: 100%;
   background-color: var(--sl-color-neutrals-100);
   display: flex;
   justify-content: space-between;
@@ -89,51 +89,62 @@ input:-internal-autofill-selected {
   }
 }
 
-ion-toast {
-  transform: rotate(90deg);
-  transform-origin: top left;
-  position: absolute !important;
-  top: 0 !important;
-  left: 99vw !important;
-
-  width: 100vh !important;
-  max-width: 100vh !important;
-
-  --width: 100vh !important;
-  --max-width: 100vh !important;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  --background: #d1ff00 !important;
 
 
-  // ✅ Texto oscuro para contraste
-  color: #000 !important;
+ion-toast.sl-toast {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+}
 
-  // ✅ Opcional: sombra para mejorar visibilidad
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+// ion-toast {
+//   transform: rotate(90deg);
+//   transform-origin: top left;
+//   position: absolute !important;
+//   top: 0 !important;
+//   left: 99vw !important;
 
-  .toast-message {
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 2.4rem;
-    font-weight: bold;
-    padding: 1rem 2rem;
-    width: 100% !important;
-    box-sizing: border-box;
-    text-align: center;
-  }
+//   width: 100vh !important;
+//   max-width: 100vh !important;
 
-  &::part(message) {
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 2.4rem;
-    font-weight: bold;
-    padding: 1rem 2rem;
-    width: 100% !important;
-    max-width: 100vh !important;
-    box-sizing: border-box;
-    text-align: center;
-  }
+//   --width: 100vh !important;
+//   --max-width: 100vh !important;
+
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   --background: #d1ff00 !important;
+
+
+//   // ✅ Texto oscuro para contraste
+//   color: #000 !important;
+
+//   // ✅ Opcional: sombra para mejorar visibilidad
+//   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+
+//   .toast-message {
+//     white-space: pre-wrap;
+//     word-break: break-word;
+//     font-size: 2.4rem;
+//     font-weight: bold;
+//     padding: 1rem 2rem;
+//     width: 100% !important;
+//     box-sizing: border-box;
+//     text-align: center;
+//   }
+
+//   &::part(message) {
+//     white-space: pre-wrap;
+//     word-break: break-word;
+//     font-size: 2.4rem;
+//     font-weight: bold;
+//     padding: 1rem 2rem;
+//     width: 100% !important;
+//     max-width: 100vh !important;
+//     box-sizing: border-box;
+//     text-align: center;
+//   }
+// }
+
+.sl-text-field .sl-text-field__wrapper {
+  margin-bottom: 2rem;
 }

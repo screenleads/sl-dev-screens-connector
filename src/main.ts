@@ -9,7 +9,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { APP_CONFIG } from './environments/config/app-config.token';
 import { environment } from './environments/config/environment';
 import { File } from '@awesome-cordova-plugins/file/ngx';
-import { jwtInterceptor } from './app/core/interceptors/jwt.interceptor';
+import { httpInterceptor } from './app/core/interceptors/http.interceptor';
 import { LoggerModule, NGXLogger, NgxLoggerLevel } from 'ngx-logger';
 import { importProvidersFrom } from '@angular/core';
 
@@ -18,7 +18,7 @@ bootstrapApplication(AppComponent, {
     { provide: File, useClass: File },
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
-    provideHttpClient(withInterceptors([jwtInterceptor])),
+    provideHttpClient(withInterceptors([httpInterceptor])),
     provideRouter(routes, withPreloading(PreloadAllModules)),
     { provide: APP_CONFIG, useValue: environment },
     importProvidersFrom(LoggerModule.forRoot({

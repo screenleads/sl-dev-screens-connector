@@ -1,5 +1,6 @@
 <ion-app>
-  <div class="app-rotated">
+  <div id="main" [class.app-rotated]="true">
     <ion-router-outlet></ion-router-outlet>
+    <app-notify-center></app-notify-center>
   </div>
 </ion-app>

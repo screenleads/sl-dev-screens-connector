@@ -2,6 +2,7 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  inject,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -24,6 +25,7 @@ import CapacitorBlobWriter from 'capacitor-blob-writer';
 import { DateTime } from 'luxon';
 import { WallSyncService } from 'src/app/shared/services/wall-sync.service';
 import { DeviceStore } from 'src/app/stores/device.store';
+import { NGXLogger } from 'ngx-logger';
 @Component({
   selector: 'app-wall',
   templateUrl: './wall.component.html',
@@ -40,6 +42,7 @@ import { DeviceStore } from 'src/app/stores/device.store';
 export class WallComponent implements OnInit {
   @ViewChild('mainVideo', { static: false }) mainVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('bufferVideo', { static: true }) bufferVideoRef!: ElementRef<HTMLVideoElement>;
+  private logger = inject(NGXLogger);
 
   public advices: Advice[] = [];
   public currentAdvice: Advice | undefined = undefined;
@@ -66,6 +69,7 @@ export class WallComponent implements OnInit {
   private showAlert(message: string) {
     this.errorMessage = message;
     this.changeDetector.detectChanges(); // fuerza actualización inmediata
+    this.logger.error('[WebsocketEventHandler] Alerta:::', message);
     setTimeout(() => {
       this.errorMessage = null;
       this.changeDetector.detectChanges();
@@ -75,7 +79,9 @@ export class WallComponent implements OnInit {
     // console.log("→ Obteniendo advices...", this._devicesSrv.getDevice());
 
     await this.refreshAdviceList();
-
+    this.refreshSub = this.wallSync.refreshAds$.subscribe(() => {
+      this.refreshAdviceList();
+    });
 
   }
 
@@ -95,9 +101,7 @@ export class WallComponent implements OnInit {
         return;
       }
       this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisiblesByDevice(device.id));
-      this.refreshSub = this.wallSync.refreshAds$.subscribe(() => {
-        this.refreshAdviceList();
-      });
+
       this.total = this.advices.length;
       console.log(this.advices.length);
       if (this.total > 0) {
@@ -121,9 +125,9 @@ export class WallComponent implements OnInit {
           attempts++;
         }
         this.currentAdvice = nextAdvice;
-
+        this.currentIndex = nextIndex;
         await this.preloadNextVideo(this.mainVideoRef.nativeElement, nextAdvice);
-        this.advanceIndex();
+        // this.advanceIndex();
       }
 
       this.loaded = true;
@@ -180,7 +184,7 @@ export class WallComponent implements OnInit {
 
       if (!iosConflict && !androidConflict) {
         console.error('❌ Error creando carpeta:', error);
-        this.showAlert('❌ Error al crear la carpeta: ' + error);
+        // this.showAlert('❌ Error al crear la carpeta: ' + error);
         throw error;
       } else {
         console.warn('📁 Carpeta ya existe, continuando...');
@@ -197,27 +201,6 @@ export class WallComponent implements OnInit {
     return localUrl;
   }
 
-
-  private async ensureVideoDirectoryExists(dir: string): Promise<void> {
-    try {
-      await Filesystem.mkdir({
-        path: dir,
-        directory: Directory.Cache,
-        recursive: true,
-      });
-      console.log(`📁 Carpeta '${dir}' creada exitosamente`);
-    } catch (error: any) {
-      const msg = error?.message || '';
-      if (msg.includes('does already exist')) {
-        console.warn(`📁 Carpeta '${dir}' ya existe. Continuando...`);
-        return;
-      }
-
-      console.error('❌ Error creando carpeta:', error);
-      this.showAlert('❌ Error al crear la carpeta: ' + msg);
-      throw error;
-    }
-  }
 
 
   playAdvices() {
@@ -340,35 +323,76 @@ export class WallComponent implements OnInit {
     return 'other';
   }
 
-  isAdviceVisible(advice: Advice): boolean {
-    if (!advice.visibilityRules?.length) return true;
+  private parseTime(input: any): { h: number; m: number } | null {
+    if (Array.isArray(input) && input.length >= 2
+      && Number.isFinite(+input[0]) && Number.isFinite(+input[1])) {
+      return { h: +input[0], m: +input[1] };
+    }
+    if (typeof input === 'string') {
+      const m = input.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+      if (m) return { h: +m[1], m: +m[2] };
+    }
+    return null;
+  }
+
+  // (opcional) normaliza nombre de día ES→EN si te llega en español
+  private normalizeDayName(day: any): string {
+    const d = String(day ?? '').trim().toUpperCase();
+    const map: Record<string, string> = {
+      'LUNES': 'MONDAY', 'MARTES': 'TUESDAY', 'MIERCOLES': 'WEDNESDAY', 'MIÉRCOLES': 'WEDNESDAY',
+      'JUEVES': 'THURSDAY', 'VIERNES': 'FRIDAY',
+      'SABADO': 'SATURDAY', 'SÁBADO': 'SATURDAY', 'DOMINGO': 'SUNDAY'
+    };
+    return map[d] || d;
+  }
+
+  // ✅ decide visibilidad con null = "todo el día"
+  isAdviceVisible(advice: Advice | null | undefined): boolean {
+    if (!advice?.visibilityRules || advice.visibilityRules.length === 0) return true;
 
     const now = DateTime.now().setZone('Europe/Madrid');
-    const currentDay = now.toFormat('cccc').toUpperCase(); // ej. "MONDAY"
+    const currentDay = now.setLocale('en').toFormat('cccc').toUpperCase(); // "WEDNESDAY"
     const currentMinutes = now.hour * 60 + now.minute;
 
-    for (const rule of advice.visibilityRules) {
-      if (rule.day !== currentDay) continue;
+    for (const rule of advice.visibilityRules ?? []) {
+      if (!rule) continue;
 
-      for (const range of rule.timeRanges || []) {
-        const [fromH, fromM] = range.fromTime;
-        const [toH, toM] = range.toTime;
-        const fromMinutes = fromH * 60 + fromM;
-        const toMinutes = toH * 60 + toM;
+      const ruleDay = this.normalizeDayName((rule as any).day);
+      if (ruleDay !== currentDay) continue;
 
-        // 💡 Soporte para rangos que cruzan medianoche
+      const ranges = (rule as any).timeRanges ?? [];
+
+      // Sin rangos → visible todo el día
+      if (!Array.isArray(ranges) || ranges.length === 0) return true;
+
+      for (const range of ranges) {
+        if (!range) continue;
+
+        const fromRaw = (range as any).fromTime;
+        const toRaw = (range as any).toTime;
+
+        // Ambos null → visible todo el día
+        if (fromRaw == null && toRaw == null) return true;
+
+        const fromParsed = this.parseTime(fromRaw);
+        const toParsed = this.parseTime(toRaw);
+
+        // Si alguno viene mal formado, lo ignoramos
+        if (!fromParsed || !toParsed) continue;
+
+        const fromMinutes = fromParsed.h * 60 + fromParsed.m;
+        const toMinutes = toParsed.h * 60 + toParsed.m;
+
         if (fromMinutes <= toMinutes) {
-          // Rango normal
-          if (currentMinutes >= fromMinutes && currentMinutes <= toMinutes) {
-            return true;
-          }
+          // Rango normal (mismo día)
+          if (currentMinutes >= fromMinutes && currentMinutes <= toMinutes) return true;
         } else {
-          // Rango que cruza la medianoche (ej. 22:00 a 06:00)
-          if (currentMinutes >= fromMinutes || currentMinutes <= toMinutes) {
-            return true;
-          }
+          // Rango que cruza medianoche
+          if (currentMinutes >= fromMinutes || currentMinutes <= toMinutes) return true;
         }
       }
+
+      // Si había regla para el día pero ningún rango válido coincidió, sigue mirando otras reglas
     }
 
     return false;
