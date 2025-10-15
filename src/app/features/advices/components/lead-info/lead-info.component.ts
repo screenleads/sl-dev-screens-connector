@@ -8,7 +8,7 @@ import { NGXLogger } from 'ngx-logger';
   templateUrl: './lead-info.component.html',
   styleUrls: ['./lead-info.component.scss'],
   standalone: true,
-  imports: [QrCodeComponent, NgIf]
+  imports: [QrCodeComponent]
 
 })
 export class LeadInfoComponent implements OnInit {

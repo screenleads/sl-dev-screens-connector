@@ -1,6 +1,7 @@
 // notification.service.ts
 import { Injectable, inject } from '@angular/core';
-import { ToastController } from '@ionic/angular';
+import { ToastController, ModalController } from '@ionic/angular';
+import { NotificationUpdateModalComponent } from 'src/app/shared/components/notification-update-modal.component';
 import { toastController as coreToastController } from '@ionic/core';
 import { ChatMessage } from 'src/app/shared/models/ChatMessage';
 
@@ -8,7 +9,9 @@ export type ToastType = 'success' | 'warning' | 'danger' | 'info';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
+    constructor(private modalController: ModalController) { }
     private toastController = inject(ToastController);
+
 
     private mapToastTypeToColor(type: string): string {
         switch (type) {
@@ -83,14 +86,43 @@ export class NotificationService {
         await this.show(String(text), level);
     }
 
-    showForceUpdate(url: string) {
-        alert('Versión obsoleta. Actualización obligatoria.');
-        window.open(url, '_system');
+    async showForceUpdate(url: string, message: string = 'Hay una nueva versión obligatoria.') {
+        try {
+            console.log('[NotificationService] showForceUpdate llamado', { url, message });
+
+            const modal = await this.modalController.create({
+                component: NotificationUpdateModalComponent,
+                componentProps: {
+                    message,
+                    downloadUrl: url,
+                    forceUpdate: true
+                },
+                backdropDismiss: false
+            });
+            await modal.present();
+            console.log('[NotificationService] Modal de actualización forzada presentado');
+        } catch (err) {
+            console.error('[NotificationService] Error mostrando modal de actualización forzada', err);
+        }
     }
 
-    showOptionalUpdate(url: string) {
-        if (confirm('Hay una nueva versión. ¿Quieres actualizar?')) {
-            window.open(url, '_system');
+    async showOptionalUpdate(url: string, message: string = 'Hay una nueva versión disponible.') {
+        try {
+            console.log('[NotificationService] showOptionalUpdate llamado', { url, message });
+
+            const modal = await this.modalController.create({
+                component: NotificationUpdateModalComponent,
+                componentProps: {
+                    message,
+                    downloadUrl: url,
+                    forceUpdate: false
+                },
+                backdropDismiss: true
+            });
+            await modal.present();
+            console.log('[NotificationService] Modal de actualización opcional presentado');
+        } catch (err) {
+            console.error('[NotificationService] Error mostrando modal de actualización opcional', err);
         }
     }
 }
