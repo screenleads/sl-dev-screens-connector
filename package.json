@@ -1,6 +1,6 @@
 {
   "name": "sl-dev-screens-connector",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "author": "David Jato",
   "homepage": "https://ionicframework.com/",
   "scripts": {
@@ -54,8 +54,7 @@
     "ng-qrcode": "^20.0.0",
     "ngx-logger": "^5.0.12",
     "rxjs": "~7.8.0",
-    "sl-dev-components": "^0.0.2",
-    "sl-dev-design-system": "file:sl-dev-design-system-0.0.0.tgz",
+    "sl-dev-components": "^0.0.6",
     "sockjs-client": "^1.6.1",
     "tslib": "^2.3.0",
     "uuid": "^11.1.0",

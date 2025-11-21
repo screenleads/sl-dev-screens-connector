@@ -50,8 +50,6 @@ export class AuthStore {
             } else {
               localStorage.removeItem('company');
             }
-            // Llamar a checkForUpdates tras guardar el usuario
-            this.appVersionService.checkForUpdates();
           }
           this.decodeTokenMetadata();
           this.scheduleTokenCheck();
@@ -84,8 +82,6 @@ export class AuthStore {
         } else {
           localStorage.removeItem('company');
         }
-        // Llamar a checkForUpdates tras guardar el usuario
-        this.appVersionService.checkForUpdates();
       },
       error: err => {
         this.logger.error('[AuthStore] Error al obtener perfil. Cerrando sesión', err);

@@ -2,5 +2,13 @@
   <div id="main" [class.app-rotated]="isTV">
     <ion-router-outlet></ion-router-outlet>
     <app-notify-center></app-notify-center>
+    <!-- Modal de actualización standalone -->
+    <!-- <app-notification-update-modal *ngIf="showUpdateModal" [message]="updateInfo?.message"
+      [downloadUrl]="updateInfo?.downloadUrl" [forceUpdate]="updateInfo?.forceUpdate"
+      (close)="showUpdateModal = false"></app-notification-update-modal> -->
+
+    <app-notification-update-modal *ngIf="showUpdateModal" [message]="updateInfo?.message"
+      [downloadUrl]="updateInfo?.downloadUrl" [forceUpdate]="updateInfo?.forceUpdate"
+      (close)="showUpdateModal = false"></app-notification-update-modal>
   </div>
 </ion-app>
