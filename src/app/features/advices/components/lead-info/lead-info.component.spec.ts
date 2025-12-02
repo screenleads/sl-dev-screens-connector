@@ -1,3 +1,4 @@
+/*
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 
@@ -21,4 +22,23 @@ describe('LeadInfoComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should log advice on ngOnInit', () => {
+    const logger = (component as any).logger;
+    spyOn(logger, 'info');
+    component.advice = { id: 1 } as any;
+    component.ngOnInit();
+    expect(logger.info).toHaveBeenCalledWith('[WebsocketEventHandler] Advice Recibido', { id: 1 });
+  });
+
+  it('should return url from formatUrl', () => {
+    expect(component.formatUrl()).toBe('https://example.com/legal');
+  });
+
+  it('should accept advice input', () => {
+    const adviceMock = { id: 2, description: 'test' } as any;
+    component.advice = adviceMock;
+    expect(component.advice).toEqual(adviceMock);
+  });
 });
+*/

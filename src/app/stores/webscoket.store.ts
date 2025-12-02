@@ -1,8 +1,10 @@
 import { Injectable, signal, computed, WritableSignal, inject } from '@angular/core';
 import { Stomp, Client, StompSubscription, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { NGXLogger } from 'ngx-logger';
-import { APP_CONFIG } from 'src/environments/config/app-config.token';
+import { ErrorLoggerService } from 'src/app/shared/services/error-logger.service';
+import { LoggingService } from 'src/app/shared/services/logging.service';
+// ...existing code...
+import { ApiConnectionService } from 'src/app/shared/services/api-connection.service';
 import { ChatMessage } from 'src/app/shared/models/ChatMessage';
 import { AuthStore } from './auth.store';
 
@@ -16,32 +18,33 @@ export class WebsocketStateStore {
   readonly currentRoom = computed(() => this._room());
   readonly messages = computed(() => this._messages());
 
-  private config = inject(APP_CONFIG);
-  private logger = inject(NGXLogger);
+  private api = inject(ApiConnectionService);
+  private errorLogger = inject(ErrorLoggerService);
+  private logger = inject(LoggingService);
   private authStore = inject(AuthStore);
 
   private stompClient: any | null = null;
   private roomSub: StompSubscription | null = null;
-  private socketUrl = `https://${this.config.apiHost}/chat-socket`;
+  private socketUrl = `https://${(this.api as any).config.apiHost}/chat-socket`;
   private intendedRoom: string | null = null; // para re-suscripciones
 
   connect(roomId: string) {
-    this.logger.debug(`[WebsocketStore] Solicitud de conexión a ${this.socketUrl} sala=${roomId}`);
+    this.logger.log('[WebsocketStore] Solicitud de conexión', { socketUrl: this.socketUrl, roomId });
     const token = this.authStore.token;
     if (!token) {
-      this.logger.error('[WebsocketStore] No se pudo conectar: no hay token JWT');
+      this.errorLogger.error('[WebsocketStore] No se pudo conectar: no hay token JWT');
       return;
     }
 
     // ✅ Idempotencia: si ya estamos conectados a esta misma sala, no hagas nada
     if (this.stompClient?.connected && this._connected() && this._room() === roomId) {
-      this.logger.debug('[WebsocketStore] Ya conectado a la misma sala. Ignorando.');
+      this.logger.log('[WebsocketStore] Ya conectado a la misma sala. Ignorando.');
       return;
     }
 
     // Si hay un cliente previo (otra sala o reconexión), ciérralo limpio
     if (this.stompClient) {
-      this.logger.warn('[WebsocketStore] Había un cliente previo. Cerrando antes de reconectar.');
+      this.logger.log('[WebsocketStore] Había un cliente previo. Cerrando antes de reconectar.');
       try { this.roomSub?.unsubscribe(); } catch { }
       this.roomSub = null;
       try { this.stompClient.deactivate(); } catch { }
@@ -68,7 +71,7 @@ export class WebsocketStateStore {
       () => {
         this.stompClient = client;
         this._connected.set(true);
-        this.logger.info(`[WebsocketStore] Conectado. session=${(client as any)?.sessionId ?? 'n/a'}`);
+        this.logger.log('[WebsocketStore] Conectado', { session: (client as any)?.sessionId ?? 'n/a' });
 
         // Re-suscribe de forma segura/idempotente a la sala actual
         if (this.intendedRoom) {
@@ -77,14 +80,14 @@ export class WebsocketStateStore {
       },
       (error: any) => {
         this._connected.set(false);
-        this.logger.error('[WebsocketStore] Error de conexión', error);
+        this.errorLogger.error('[WebsocketStore] Error de conexión', error);
       }
     );
   }
 
   private subscribeToRoom(roomId: string) {
     if (!this.stompClient?.connected) {
-      this.logger.warn('[WebsocketStore] subscribeToRoom llamado sin conexión.');
+      this.logger.log('[WebsocketStore] subscribeToRoom llamado sin conexión.');
       return;
     }
 
@@ -96,7 +99,8 @@ export class WebsocketStateStore {
     const topic = `/topic/${roomId}`;
     this.roomSub = this.stompClient.subscribe(topic, (msg: IMessage) => {
       try {
-        const raw = JSON.parse(msg.body);
+        const raw: any = this.api.safeJsonParse(msg.body);
+        if (!raw) throw new Error('JSON inválido');
 
         // Fallback de id si el backend aún no lo pone
         raw.id ||= `${raw.type}|${raw.message}|${raw.senderId}|${raw.timestamp ?? ''}`;
@@ -108,14 +112,14 @@ export class WebsocketStateStore {
         // Opción B (recomendada si tu clase tiene getters/setters):
         const message = new ChatMessage(raw);
 
-        this.logger.info('[WebsocketStore] Mensaje recibido:', message);
+        this.logger.log('[WebsocketStore] Mensaje recibido', { message });
         this._messages.update(prev => [...prev, message]);
       } catch (e) {
-        this.logger.error('[WebsocketStore] Error parseando mensaje STOMP', e);
+        this.errorLogger.error('[WebsocketStore] Error parseando mensaje STOMP', e);
       }
     });
 
-    this.logger.info('[WebsocketStore] Suscrito a', topic, 'id=', this.roomSub?.id);
+    this.logger.log('[WebsocketStore] Suscrito a', { topic, id: this.roomSub?.id });
   }
 
 
@@ -129,9 +133,9 @@ export class WebsocketStateStore {
         { Authorization: `Bearer ${token}` },
         JSON.stringify(message)
       );
-      this.logger.debug('[WebsocketStore] Mensaje enviado:', message);
+      this.logger.log('[WebsocketStore] Mensaje enviado', { message });
     } else {
-      this.logger.warn('[WebsocketStore] No conectado. Mensaje no enviado');
+      this.logger.log('[WebsocketStore] No conectado. Mensaje no enviado');
     }
   }
 
@@ -146,6 +150,6 @@ export class WebsocketStateStore {
     this._connected.set(false);
     this._room.set(null);
     this._messages.set([]);
-    this.logger.warn('[WebsocketStore] Desconectado del socket');
+    this.logger.log('[WebsocketStore] Desconectado del socket');
   }
 }

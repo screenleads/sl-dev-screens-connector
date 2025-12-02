@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { LoggingService } from 'src/app/shared/services/logging.service';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { SlButtonComponent, SlIconComponent, SlModuleTitleComponent } from 'sl-dev-components';
@@ -7,8 +8,7 @@ import { SlButtonComponent, SlIconComponent, SlModuleTitleComponent } from 'sl-d
   selector: 'app-notification-update-modal',
   standalone: true,
   imports: [IonicModule, CommonModule, SlButtonComponent,
-    SlIconComponent,
-    SlModuleTitleComponent],
+    SlIconComponent],
   template: `
     <div class="custom-modal-backdrop">
       <div class="custom-modal-card">
@@ -106,10 +106,12 @@ export class NotificationUpdateModalComponent {
   @Input() downloadUrl!: string;
   @Input() forceUpdate: boolean = false;
 
-  @Output() close = new EventEmitter<void>();
+  @Output() modalClose = new EventEmitter<void>();
+
+  private logger: LoggingService = new LoggingService();
 
   download() {
-    console.log('[UpdateModal] downloadUrl:', this.downloadUrl, 'forceUpdate:', this.forceUpdate);
+    this.logger.log('[UpdateModal] downloadUrl:', { downloadUrl: this.downloadUrl, forceUpdate: this.forceUpdate });
     if (this.downloadUrl) {
       window.open(this.downloadUrl, '_system');
     }
@@ -119,6 +121,6 @@ export class NotificationUpdateModalComponent {
   }
 
   dismiss() {
-    this.close.emit();
+    this.modalClose.emit();
   }
 }

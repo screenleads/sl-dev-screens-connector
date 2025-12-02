@@ -8,7 +8,7 @@ import { AuthStore } from './stores/auth.store';
 import { WebsocketEventHandlerService } from './shared/services/websocket-event-handler.service';
 import { NotifyCenterComponent } from './shared/components/notify-center/notify-center.component';
 import { SHARED_MODALS } from './shared/shared-modals';
-import { AppVersionService } from './shared/services/app-version.service';
+import { AppVersion } from './shared/models/AppVersion';
 // import { NotificationService } from './shared/services/notification.service';
 import { Capacitor } from '@capacitor/core';
 import { APP_VERSION } from '../environments/version';
@@ -33,7 +33,7 @@ export class AppComponent implements OnInit {
   isTV = false;
 
   showUpdateModal: boolean = false;
-  updateInfo: any = null;
+  updateInfo: AppVersion | null = null;
 
   ngOnInit() {
     this.isTV = this.detectIfTV();
@@ -46,11 +46,11 @@ export class AppComponent implements OnInit {
     if (typeof platform === 'string' && isNaN(Number(platform))) {
       const url = `${environment.apiUrl}/app-versions/latest/${platform}`;
       this.logger.debug(`[UpdateCheck] Consultando API de versiones: ${url}`);
-      this.http.get<any>(url).subscribe({
-        next: versionInfo => {
+      this.http.get<AppVersion>(url).subscribe({
+        next: (versionInfo: AppVersion) => {
           this.logger.debug('[UpdateCheck] Respuesta de la API:', versionInfo);
           const latestVersion = versionInfo.version;
-          const downloadUrl = versionInfo.downloadUrl || versionInfo.url;
+          const downloadUrl = versionInfo.url;
           const forceUpdate = !!versionInfo.forceUpdate;
           this.logger.info(`[UpdateCheck] Última versión disponible: ${latestVersion}, forceUpdate: ${forceUpdate}`);
           if (latestVersion && currentVersion) {
@@ -58,12 +58,12 @@ export class AppComponent implements OnInit {
             this.logger.info(`[UpdateCheck] ¿Está desactualizada? ${isOutdated}`);
             if (isOutdated && downloadUrl) {
               this.logger.warn('[UpdateCheck] Mostrando modal de actualización');
-              this.updateInfo = { downloadUrl, forceUpdate, message: versionInfo.message };
+              this.updateInfo = versionInfo;
               this.showUpdateModal = true;
             }
           } else if (downloadUrl) {
             this.logger.warn('[UpdateCheck] No se pudo comparar versiones, pero hay URL de descarga. Mostrando modal.');
-            this.updateInfo = { downloadUrl, forceUpdate, message: versionInfo.message };
+            this.updateInfo = versionInfo;
             this.showUpdateModal = true;
           }
         },
@@ -97,8 +97,8 @@ export class AppComponent implements OnInit {
       }
     });
     effect(() => {
-      if (this.authStore.isLoggedIn()) {
-        this.wsStore.connect(this.deviceStore.device().uuid);
+      if (this.authStore.isLoggedIn() && this.deviceStore.device()) {
+        this.wsStore.connect(this.deviceStore.device()!.uuid);
       } else {
         this.wsStore.disconnect();
       }

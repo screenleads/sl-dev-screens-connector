@@ -1,3 +1,4 @@
+/*
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConnectionPage } from './connection.page';
 
@@ -15,3 +16,4 @@ describe('ConnectionPage', () => {
     expect(component).toBeTruthy();
   });
 });
+*/

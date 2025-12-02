@@ -4,8 +4,10 @@ import {
   ElementRef,
   inject,
   OnInit,
-  ViewChild
+  ViewChild,
+  OnDestroy
 } from '@angular/core';
+import { DateUtilsService } from 'src/app/shared/services/date-utils.service';
 import { AdvicesService } from '../../services/advices.service';
 import { Advice } from '../../model/Advice';
 import {
@@ -25,7 +27,8 @@ import CapacitorBlobWriter from 'capacitor-blob-writer';
 import { DateTime } from 'luxon';
 import { WallSyncService } from 'src/app/shared/services/wall-sync.service';
 import { DeviceStore } from 'src/app/stores/device.store';
-import { NGXLogger } from 'ngx-logger';
+import { ErrorLoggerService } from 'src/app/shared/services/error-logger.service';
+import { LoggingService } from 'src/app/shared/services/logging.service';
 @Component({
   selector: 'app-wall',
   templateUrl: './wall.component.html',
@@ -39,52 +42,11 @@ import { NGXLogger } from 'ngx-logger';
   ],
   standalone: true
 })
-export class WallComponent implements OnInit {
-  @ViewChild('mainVideo', { static: false }) mainVideoRef!: ElementRef<HTMLVideoElement>;
-  @ViewChild('bufferVideo', { static: true }) bufferVideoRef!: ElementRef<HTMLVideoElement>;
-  private logger = inject(NGXLogger);
-
-  public advices: Advice[] = [];
-  public currentAdvice: Advice | undefined = undefined;
-  public currentIndex = 0;
-  public played = false;
-  public loaded = false;
-  public interval: any;
-  videoSrc: string | null = null;
-  public progress = 0;
-  public total = 0;
-  public errorMessage: string | null = null;
-  private refreshSub!: Subscription;
-  constructor(
-    private _advicesSrv: AdvicesService,
-    private changeDetector: ChangeDetectorRef,
-    private videoStorageSrv: VideoStorageService,
-    private wallSync: WallSyncService,
-    private deviceStore: DeviceStore
-  ) {
-
-
+export class WallComponent implements OnInit, OnDestroy {
+  // Método público para iniciar la reproducción desde el template
+  public playAdvices(): void {
+    this.playAdviceLoop();
   }
-
-  private showAlert(message: string) {
-    this.errorMessage = message;
-    this.changeDetector.detectChanges(); // fuerza actualización inmediata
-    this.logger.error('[WebsocketEventHandler] Alerta:::', message);
-    setTimeout(() => {
-      this.errorMessage = null;
-      this.changeDetector.detectChanges();
-    }, 8000); // mensaje visible por 8 segundos
-  }
-  async ngOnInit() {
-    // console.log("→ Obteniendo advices...", this._devicesSrv.getDevice());
-
-    await this.refreshAdviceList();
-    this.refreshSub = this.wallSync.refreshAds$.subscribe(() => {
-      this.refreshAdviceList();
-    });
-
-  }
-
   async refreshAdviceList() {
     try {
       this.advices = [];
@@ -101,21 +63,20 @@ export class WallComponent implements OnInit {
         return;
       }
       this.advices = await firstValueFrom(this._advicesSrv.getAdvicesVisiblesByDevice(device.id));
-
       this.total = this.advices.length;
-      console.log(this.advices.length);
       if (this.total > 0) {
         for (const advice of this.advices) {
           try {
-            await this.downloadVideoToTV(advice);
+            const videoUrl = advice?.media?.src;
+            if (videoUrl) {
+              const filename = `video-${advice.id}.mp4`;
+              await this.videoStorageSrv.downloadVideoToCache(videoUrl, filename);
+            }
             this.progress++;
           } catch (err) {
-            console.error('Error al descargar', advice.id, err);
             this.showAlert('❌ Error al descargar: ' + (err));
           }
         }
-
-        console.log("✅ Todos los videos listos");
         let attempts = 0;
         let nextIndex = 0;
         let nextAdvice = this.advices[nextIndex];
@@ -127,87 +88,66 @@ export class WallComponent implements OnInit {
         this.currentAdvice = nextAdvice;
         this.currentIndex = nextIndex;
         await this.preloadNextVideo(this.mainVideoRef.nativeElement, nextAdvice);
-        // this.advanceIndex();
       }
-
       this.loaded = true;
-
     } catch (err) {
       this.showAlert('❌ Error actualizando anuncios: ' + err);
     }
   }
+  @ViewChild('mainVideo', { static: false }) mainVideoRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('bufferVideo', { static: true }) bufferVideoRef!: ElementRef<HTMLVideoElement>;
+  private errorLogger = inject(ErrorLoggerService);
+  private logger = inject(LoggingService);
+  public advices: Advice[] = [];
+  public currentAdvice: Advice | undefined = undefined;
+  public currentIndex = 0;
+  public played = false;
+  public loaded = false;
+  public interval: number | undefined;
+  videoSrc: string | null = null;
+  public progress = 0;
+  public total = 0;
+  public errorMessage: string | null = null;
+  private refreshSub!: Subscription;
+  private dateUtils = inject(DateUtilsService);
 
-  ngOnDestroy() {
+  constructor(
+    private _advicesSrv: AdvicesService,
+    private changeDetector: ChangeDetectorRef,
+    private videoStorageSrv: VideoStorageService,
+    private wallSync: WallSyncService,
+    private deviceStore: DeviceStore
+  ) { }
+
+  // Métodos públicos para delegar a DateUtilsService
+  isAdviceVisible(advice: Advice | null | undefined): boolean {
+    return this.dateUtils.isAdviceVisible(advice);
+  }
+
+  parseTime(input: string | number[]): { h: number; m: number } | null {
+    return this.dateUtils.parseTime(input);
+  }
+
+  normalizeDayName(day: string): string {
+    return this.dateUtils.normalizeDayName(day);
+  }
+
+  ngOnDestroy(): void {
     this.refreshSub?.unsubscribe();
   }
-  blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => resolve((reader.result as string).split(',')[1]); // solo base64
-      reader.readAsDataURL(blob);
-    });
+
+  private showAlert(message: string) {
+    this.errorMessage = message;
+    this.changeDetector.detectChanges(); // fuerza actualización inmediata
+    this.errorLogger.error('[WebsocketEventHandler] Alerta:::', message);
+    setTimeout(() => {
+      this.errorMessage = null;
+      this.changeDetector.detectChanges();
+    }, 8000); // mensaje visible por 8 segundos
   }
-
-  async downloadVideoToTV(advice: Advice) {
-    try {
-      console.log("EMPEZAMOS A GUARDAR EL " + advice.media?.src!);
-      const response = await fetch(advice.media?.src!);
-      if (!response.ok) throw new Error('Error al descargar el video');
-
-      const blob = await response.blob();
-      if (blob.size === 0) throw new Error('El video descargado está vacío');
-      const path = await this.saveVideoBlob(blob, `video-${advice.id}.mp4`);
-      console.log("✅ Video guardado en:", path);
-    } catch (e) {
-      console.error(`Error en video ${advice.id}:`, e);
-      this.showAlert('❌ Error al descargar: ' + (e));
-
-      // (opcional) mostrar toast o continuar sin cortar
-    }
-
+  async ngOnInit() {
+    await this.refreshAdviceList();
   }
-  async saveVideoBlob(blob: Blob, fileName: string): Promise<string> {
-    const dir = 'videos';
-    const path = `${dir}/${fileName}`;
-
-    try {
-      await Filesystem.mkdir({
-        path: dir,
-        directory: Directory.Cache,
-        recursive: true,
-      });
-    } catch (error: any) {
-      const msg = error?.message?.toLowerCase() || '';
-      const iosConflict = error?.code === '12'; // iOS sometimes uses code 12 for file exists
-      const androidConflict = msg.includes('already exists') || msg.includes('cannot be overwritten');
-
-      if (!iosConflict && !androidConflict) {
-        console.error('❌ Error creando carpeta:', error);
-        // this.showAlert('❌ Error al crear la carpeta: ' + error);
-        throw error;
-      } else {
-        console.warn('📁 Carpeta ya existe, continuando...');
-      }
-    }
-
-    await CapacitorBlobWriter({
-      path,
-      directory: Directory.Cache,
-      blob,
-    });
-
-    const localUrl = Capacitor.convertFileSrc(path);
-    return localUrl;
-  }
-
-
-
-  playAdvices() {
-    this.playAdviceLoop();
-  }
-
-
 
   async playAdviceLoop(): Promise<void> {
     try {
@@ -228,21 +168,18 @@ export class WallComponent implements OnInit {
         attempts++;
       }
 
-
       this.currentAdvice = currentAdvice;
-
 
       // // Preparar evento fallback
       const timeout = setTimeout(() => {
-        console.warn('⚠️ Fallback por timeout: video no terminó en 60s');
+        this.logger.log('⚠️ Fallback por timeout: video no terminó en 60s');
         currentVideoEl.dispatchEvent(new Event('ended'));
       }, 60000);
 
       // Añadir eventos de diagnóstico
       currentVideoEl.onerror = (err) => this.showAlert('❌ Error al reproducir ' + (err));
-      ;
-      currentVideoEl.onstalled = () => console.warn('📛 Video detenido (stalled)');
-      currentVideoEl.onwaiting = () => console.warn('⏳ Video esperando datos');
+      currentVideoEl.onstalled = () => this.logger.log('📛 Video detenido (stalled)');
+      currentVideoEl.onwaiting = () => this.logger.log('⏳ Video esperando datos');
 
       // Reproducir el video
       await currentVideoEl.play();
@@ -261,7 +198,7 @@ export class WallComponent implements OnInit {
       this.playAdviceLoop();
 
     } catch (err) {
-      console.error('❌ Error reproduciendo video:', err);
+      this.errorLogger.error('❌ Error reproduciendo video', err);
       this.showAlert('❌ Error reproduciendo video: ' + (err));
       this.advanceIndex();
       this.playAdviceLoop();
@@ -292,11 +229,11 @@ export class WallComponent implements OnInit {
       await new Promise<void>((resolve) => {
         videoEl.onloadedmetadata = () => resolve();
       });
-      console.log(`🌀 Video precargado para advice ${advice.id}`);
+      this.logger.log(`🌀 Video precargado para advice ${advice.id}`);
       videoEl.pause();
 
     } catch (err) {
-      console.warn('⚠️ Error precargando video:', err);
+      this.errorLogger.error('⚠️ Error precargando video', err);
     }
   }
 
@@ -323,78 +260,4 @@ export class WallComponent implements OnInit {
     return 'other';
   }
 
-  private parseTime(input: any): { h: number; m: number } | null {
-    if (Array.isArray(input) && input.length >= 2
-      && Number.isFinite(+input[0]) && Number.isFinite(+input[1])) {
-      return { h: +input[0], m: +input[1] };
-    }
-    if (typeof input === 'string') {
-      const m = input.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-      if (m) return { h: +m[1], m: +m[2] };
-    }
-    return null;
-  }
-
-  // (opcional) normaliza nombre de día ES→EN si te llega en español
-  private normalizeDayName(day: any): string {
-    const d = String(day ?? '').trim().toUpperCase();
-    const map: Record<string, string> = {
-      'LUNES': 'MONDAY', 'MARTES': 'TUESDAY', 'MIERCOLES': 'WEDNESDAY', 'MIÉRCOLES': 'WEDNESDAY',
-      'JUEVES': 'THURSDAY', 'VIERNES': 'FRIDAY',
-      'SABADO': 'SATURDAY', 'SÁBADO': 'SATURDAY', 'DOMINGO': 'SUNDAY'
-    };
-    return map[d] || d;
-  }
-
-  // ✅ decide visibilidad con null = "todo el día"
-  isAdviceVisible(advice: Advice | null | undefined): boolean {
-    if (!advice?.visibilityRules || advice.visibilityRules.length === 0) return true;
-
-    const now = DateTime.now().setZone('Europe/Madrid');
-    const currentDay = now.setLocale('en').toFormat('cccc').toUpperCase(); // "WEDNESDAY"
-    const currentMinutes = now.hour * 60 + now.minute;
-
-    for (const rule of advice.visibilityRules ?? []) {
-      if (!rule) continue;
-
-      const ruleDay = this.normalizeDayName((rule as any).day);
-      if (ruleDay !== currentDay) continue;
-
-      const ranges = (rule as any).timeRanges ?? [];
-
-      // Sin rangos → visible todo el día
-      if (!Array.isArray(ranges) || ranges.length === 0) return true;
-
-      for (const range of ranges) {
-        if (!range) continue;
-
-        const fromRaw = (range as any).fromTime;
-        const toRaw = (range as any).toTime;
-
-        // Ambos null → visible todo el día
-        if (fromRaw == null && toRaw == null) return true;
-
-        const fromParsed = this.parseTime(fromRaw);
-        const toParsed = this.parseTime(toRaw);
-
-        // Si alguno viene mal formado, lo ignoramos
-        if (!fromParsed || !toParsed) continue;
-
-        const fromMinutes = fromParsed.h * 60 + fromParsed.m;
-        const toMinutes = toParsed.h * 60 + toParsed.m;
-
-        if (fromMinutes <= toMinutes) {
-          // Rango normal (mismo día)
-          if (currentMinutes >= fromMinutes && currentMinutes <= toMinutes) return true;
-        } else {
-          // Rango que cruza medianoche
-          if (currentMinutes >= fromMinutes || currentMinutes <= toMinutes) return true;
-        }
-      }
-
-      // Si había regla para el día pero ningún rango válido coincidió, sigue mirando otras reglas
-    }
-
-    return false;
-  }
 }

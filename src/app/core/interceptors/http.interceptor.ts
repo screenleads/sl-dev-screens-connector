@@ -1,5 +1,8 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { tap } from 'rxjs/operators';
 import { inject } from '@angular/core';
+import { LoggingService } from 'src/app/shared/services/logging.service';
+import { ErrorLoggerService } from 'src/app/shared/services/error-logger.service';
 import { AuthStore } from 'src/app/stores/auth.store';
 import { APP_CONFIG } from 'src/environments/config/app-config.token';
 
@@ -10,6 +13,8 @@ type AppConfig = {
 };
 
 export const httpInterceptor: HttpInterceptorFn = (req, next) => {
+  const logger: LoggingService = inject(LoggingService);
+  const errorLogger: ErrorLoggerService = inject(ErrorLoggerService);
   const authStore = inject(AuthStore);
   const config = inject<AppConfig>(APP_CONFIG);
 
@@ -57,10 +62,20 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
     }
   }
 
+  logger.info('[HTTP Interceptor] Petición interceptada', { url, method: req.method, headers: setHeaders });
   const cloned = req.clone({
     url,
     setHeaders,
   });
 
-  return next(cloned);
+  return next(cloned).pipe(
+    tap({
+      next: (event: any) => {
+        logger.debug('[HTTP Interceptor] Respuesta recibida', { url, event });
+      },
+      error: (err: any) => {
+        errorLogger.error('[HTTP Interceptor] Error en petición', { url, error: err });
+      }
+    })
+  );
 };

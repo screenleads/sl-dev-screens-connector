@@ -1,4 +1,5 @@
 import { Injectable, effect, inject, untracked } from '@angular/core';
+import { ChatMessage } from '../models/ChatMessage';
 import { NGXLogger } from 'ngx-logger';
 import { WebsocketStateStore } from 'src/app/stores/webscoket.store';
 import { Capacitor } from '@capacitor/core';
@@ -30,7 +31,7 @@ export class WebsocketEventHandlerService {
                 }
 
                 for (let i = this.lastIndex + 1; i < messages.length; i++) {
-                    const m: any = messages[i];
+                    const m: ChatMessage = messages[i];
                     const id = m?.id || `${m?.type}|${m?.message}|${m?.senderId}|${m?.timestamp ?? ''}`;
                     if (this.processed.has(id)) continue;
                     this.processed.add(id);
@@ -41,7 +42,7 @@ export class WebsocketEventHandlerService {
         });
     }
 
-    private handleMessage(message: any) {
+    private handleMessage(message: ChatMessage) {
         this.logger.info('[WebsocketEventHandler] Mensaje recibido:', message);
         if (!message || !message.type) return;
 

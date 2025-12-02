@@ -1,5 +1,6 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
+
 import { WebsocketStateStore } from 'src/app/stores/webscoket.store';
 import { ChatMessage } from 'src/app/shared/models/ChatMessage';
 import { NGXLogger } from 'ngx-logger';
@@ -33,16 +34,16 @@ export class NotifyCenterComponent {
       const messages = this.store.messages();
       const last = messages[messages.length - 1];
       if (!last) return;
-      if ((last as any).type === 'NOTIFY') {
+      if ((last as ChatMessage).type === 'NOTIFY') {
         this.pushFromChat(last);
       }
     });
   }
 
   private pushFromChat(msg: ChatMessage) {
-    const text = (msg as any).message ?? 'Notificación';
-    const meta = (msg as any).metadata ?? {};
-    const level: Level = (meta.level as Level) ?? 'info';
+    const text = (msg as ChatMessage).message ?? 'Notificación';
+    const meta = (msg as ChatMessage).metadata ?? {};
+    const level: Level = (meta['level'] as Level) ?? 'info';
     this.push(text, level);
   }
 

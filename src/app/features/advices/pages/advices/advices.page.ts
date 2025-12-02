@@ -12,12 +12,6 @@ import { WallComponent } from "../../components/wall/wall.component";
   standalone: true,
   imports: [IonContent, CommonModule, FormsModule, WallComponent]
 })
-export class AdvicesPage implements OnInit {
-  currentImage = "smash1";
-  constructor(private advicesSrv: AdvicesService) { }
-
-  ngOnInit() {
-
-  }
-
+export class AdvicesPage {
+  constructor() { }
 }

@@ -1,16 +1,43 @@
+import { LoggingService } from 'src/app/shared/services/logging.service';
 import { Injectable, computed, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+// ...existing code...
+import { ApiConnectionService } from 'src/app/shared/services/api-connection.service';
 import { Router } from '@angular/router';
 import { interval } from 'rxjs';
-import { NGXLogger } from 'ngx-logger';
+import { ErrorLoggerService } from 'src/app/shared/services/error-logger.service';
 
 import { Credentials } from 'src/app/shared/models/Credentials';
 import { JwtResponse, UserDto } from 'src/app/shared/models/LoginResponse';
 import { environment } from 'src/environments/config/environment';
-import { AppVersionService } from 'src/app/shared/services/app-version.service';
+// import { AppVersionService } from 'src/app/shared/services/app-version.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
+  /**
+   * Devuelve el usuario actual con logs de depuración sobre el nivel de rol.
+   */
+  getUserWithDebug(): UserDto | null {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      this.logger.log('[auth.store] No hay usuario en localStorage' as any);
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(user);
+      this.logger.log('[auth.store] Usuario extraído de localStorage:', parsed as any);
+      if (parsed?.role?.level != null) {
+        this.logger.log('[auth.store] Nivel de rol:', parsed.role.level as any);
+      } else if (Array.isArray(parsed?.roles) && parsed.roles.length) {
+        this.logger.log('[auth.store] Niveles de roles:', parsed.roles.map((r: any) => r?.level) as any);
+      } else {
+        this.logger.log('[auth.store] Usuario sin nivel de rol definido' as any);
+      }
+      return parsed;
+    } catch (e) {
+      this.logger.log('[auth.store] Error al parsear usuario:', e as any);
+      return null;
+    }
+  }
   private readonly _user = signal<UserDto | null>(null);
   private readonly _token = signal<string | null>(localStorage.getItem('access_token'));
   private _tokenExpiration: number | null = null;
@@ -19,25 +46,26 @@ export class AuthStore {
   readonly user = computed(() => this._user());
   readonly isLoggedIn = computed(() => !!this._token());
 
-  private http = inject(HttpClient);
+  private api = inject(ApiConnectionService);
   private router = inject(Router);
-  private logger = inject(NGXLogger);
-  private appVersionService = inject(AppVersionService);
+  private errorLogger = inject(ErrorLoggerService);
+  private logger = inject(LoggingService);
+  // private appVersionService = inject(AppVersionService);
 
   constructor() {
-    this.logger.debug('[AuthStore] Inicializado');
+    this.logger.log('[AuthStore] Inicializado' as any);
     if (this._token()) {
-      this.logger.info('[AuthStore] Token encontrado, decodificando...');
+      this.logger.log('[AuthStore] Token encontrado, decodificando...' as any);
       this.decodeTokenMetadata();
       this.scheduleTokenCheck();
       setTimeout(() => this.fetchUserProfile());
     } else {
-      this.logger.warn('[AuthStore] No hay token al iniciar se redirigira al Login');
+      this.logger.log('[AuthStore] No hay token al iniciar se redirigira al Login' as any);
     }
   }
 
   login(credentials: Credentials) {
-    this.http.post<JwtResponse>(`${environment.apiUrl}/auth/login`, credentials.toJSON())
+    this.api.post<JwtResponse>(`auth/login`, credentials.toJSON())
       .subscribe({
         next: res => {
           this._token.set(res.accessToken);
@@ -53,15 +81,15 @@ export class AuthStore {
           }
           this.decodeTokenMetadata();
           this.scheduleTokenCheck();
-          this.logger.info('[AuthStore] Login exitoso');
+          this.logger.log('[AuthStore] Login exitoso' as any);
           this.router.navigate(['/connect']);
         },
-        error: err => this.logger.error('[AuthStore] Error de login', err)
+        error: err => this.logger.error('[AuthStore] Error de login', err as any)
       });
   }
 
   logout() {
-    this.logger.warn('[AuthStore] Logout ejecutado');
+    this.logger.log('[AuthStore] Logout ejecutado' as any);
     this._token.set(null);
     this._user.set(null);
     this._tokenExpiration = null;
@@ -71,10 +99,10 @@ export class AuthStore {
   }
 
   private fetchUserProfile() {
-    this.logger.debug('[AuthStore] Obteniendo perfil de usuario...');
-    this.http.get<UserDto>(`${environment.apiUrl}/auth/me`).subscribe({
+    this.logger.log('[AuthStore] Obteniendo perfil de usuario...' as any);
+    this.api.get<UserDto>(`auth/me`).subscribe({
       next: res => {
-        this.logger.info('[AuthStore] Perfil cargado');
+        this.logger.log('[AuthStore] Perfil cargado' as any);
         this._user.set(res);
         localStorage.setItem('user', JSON.stringify(res));
         if (res.company) {
@@ -84,7 +112,7 @@ export class AuthStore {
         }
       },
       error: err => {
-        this.logger.error('[AuthStore] Error al obtener perfil. Cerrando sesión', err);
+        this.errorLogger.error('[AuthStore] Error al obtener perfil. Cerrando sesión', err);
         this.logout();
       }
     });
@@ -109,10 +137,10 @@ export class AuthStore {
       const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((timeLeftMs % (1000 * 60)) / 1000);
 
-      this.logger.debug(`[AuthStore] Token válido. Expira en ${Math.floor(duration / 60)} min`);
-      this.logger.info(`[AuthStore] Tiempo restante hasta la expiración del token: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+      this.logger.log(`[AuthStore] Token válido. Expira en ${Math.floor(duration / 60)} min` as any);
+      this.logger.log(`[AuthStore] Tiempo restante hasta la expiración del token: ${days}d ${hours}h ${minutes}m ${seconds}s` as any);
     } catch (err) {
-      this.logger.error('[AuthStore] Error decodificando token', err);
+      this.errorLogger.error('[AuthStore] Error decodificando token', err);
     }
   }
 
@@ -125,21 +153,21 @@ export class AuthStore {
       const timeLeft = this._tokenExpiration - now;
       const ratio = timeLeft / totalLifetime;
 
-      this.logger.debug(`[AuthStore] Tiempo restante del token: ${Math.floor(timeLeft / 1000)}s (${Math.round(ratio * 100)}%)`);
+      this.logger.log(`[AuthStore] Tiempo restante del token: ${Math.floor(timeLeft / 1000)}s (${Math.round(ratio * 100)}%)` as any);
 
       if (timeLeft <= 0) {
-        this.logger.warn('[AuthStore] Token expirado');
+        this.logger.log('[AuthStore] Token expirado' as any);
         this.logout();
       } else if (ratio < 0.15) {
-        this.logger.info('[AuthStore] Tiempo crítico: renovando token...');
+        this.logger.log('[AuthStore] Tiempo crítico: renovando token...' as any);
         this.refreshToken();
       }
     });
   }
 
   private refreshToken() {
-    this.logger.debug('[AuthStore] Solicitando renovación de token...');
-    this.http.post<JwtResponse>(`${environment.apiUrl}/auth/refresh`, {})
+    this.logger.log('[AuthStore] Solicitando renovación de token...');
+    this.api.post<JwtResponse>(`auth/refresh`, {})
       .subscribe({
         next: res => {
           this._token.set(res.accessToken);
@@ -147,10 +175,10 @@ export class AuthStore {
           localStorage.setItem('access_token', res.accessToken);
           if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
           this.decodeTokenMetadata();
-          this.logger.info('[AuthStore] Token renovado correctamente');
+          this.logger.log('[AuthStore] Token renovado correctamente');
         },
         error: err => {
-          this.logger.error('[AuthStore] Fallo al renovar token. Cerrando sesión.', err);
+          this.errorLogger.error('[AuthStore] Fallo al renovar token. Cerrando sesión.', err);
           this.logout();
         }
       });

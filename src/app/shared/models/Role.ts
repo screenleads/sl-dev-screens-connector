@@ -6,7 +6,8 @@ export class Role {
 
   constructor(data?: Partial<Role>) {
     Object.assign(this, data);
-  }
+  {
+    console.log('[Role] Instanciado:', { id: this.id, role: this.role, level: this.level, description: this.description, permissions: this.permissions });
 
   get id(): number { return this._id; }
   set id(v: number) { this._id = v; }

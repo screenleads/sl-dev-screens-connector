@@ -47,7 +47,7 @@
       class="media-advice media-image visible" />
   </div>
 
-  <app-lead-info *ngIf="currentAdvice?.promotion != null" [advice]="currentAdvice"></app-lead-info>
+  <app-lead-info *ngIf="currentAdvice?.promotion !== null" [advice]="currentAdvice"></app-lead-info>
 
   <div *ngIf="errorMessage" class="video-alert">
     {{ errorMessage }}

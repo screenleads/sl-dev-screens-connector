@@ -6,6 +6,16 @@ import { Platform } from '@ionic/angular';
 export class VideoStorageService {
     constructor(private file: File, private platform: Platform) { }
 
+    /**
+     * Descarga un video desde una URL y lo almacena en caché local
+     */
+    async downloadVideoToCache(url: string, filename: string): Promise<string> {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('No se pudo descargar el video');
+        const blob = await response.blob();
+        return this.saveBlob(blob, filename);
+    }
+
     async saveBlob(blob: Blob, filename: string): Promise<string> {
         await this.platform.ready();
 

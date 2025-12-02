@@ -7,8 +7,8 @@
       [downloadUrl]="updateInfo?.downloadUrl" [forceUpdate]="updateInfo?.forceUpdate"
       (close)="showUpdateModal = false"></app-notification-update-modal> -->
 
-    <app-notification-update-modal *ngIf="showUpdateModal" [message]="updateInfo?.message"
-      [downloadUrl]="updateInfo?.downloadUrl" [forceUpdate]="updateInfo?.forceUpdate"
-      (close)="showUpdateModal = false"></app-notification-update-modal>
+    <app-notification-update-modal *ngIf="showUpdateModal" [message]="updateInfo?.message!"
+      [downloadUrl]="updateInfo?.url!" [forceUpdate]="updateInfo?.forceUpdate!"
+      (modalClose)="showUpdateModal = false"></app-notification-update-modal>
   </div>
 </ion-app>
